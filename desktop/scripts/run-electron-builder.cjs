@@ -46,13 +46,16 @@ function patchFileInPlace(moduleRequest, originalSource, patchedSource, descript
   }
 }
 
-function ensurePatchedElectronBuilder() {
+function ensurePatchedNsisUtil() {
   patchFileInPlace(
     "app-builder-lib/out/targets/nsis/nsisUtil.js",
     nsisUtilOriginal,
     nsisUtilPatched,
     "NSIS util",
   );
+}
+
+function ensurePatchedAppFileCopier() {
   patchFileInPlace(
     "app-builder-lib/out/util/appFileCopier.js",
     appFileCopierOriginal,
@@ -171,9 +174,10 @@ function normalizeBuildEnvironment(sourceEnv, args) {
 function main() {
   const builderArgs = process.argv.slice(2);
   const needsWindowsPackaging = isWindowsBuildRequested(builderArgs);
+  ensurePatchedAppFileCopier();
   let shortNsisTemplatesDir = "";
   if (needsWindowsPackaging) {
-    ensurePatchedElectronBuilder();
+    ensurePatchedNsisUtil();
     shortNsisTemplatesDir = resolveShortNsisTemplateDir();
   }
 

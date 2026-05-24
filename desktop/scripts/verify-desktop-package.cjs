@@ -53,6 +53,10 @@ function assertSomeMatch(entries, pattern, description) {
   }
 }
 
+function normalizeAsarEntry(entry) {
+  return entry.replace(/^[\\/]+/, "").replace(/\\/g, "/");
+}
+
 function parsePlatformArg(argv) {
   const platformIndex = argv.indexOf("--platform");
   if (platformIndex >= 0) {
@@ -157,7 +161,7 @@ function main() {
     throw new Error("Desktop updater feed configuration is missing the GitHub provider.");
   }
 
-  const packagedFiles = new Set(asar.listPackage(layout.packagedAppArchive).map((entry) => entry.replace(/^\\/, "").replace(/\\/g, "/")));
+  const packagedFiles = new Set(asar.listPackage(layout.packagedAppArchive).map(normalizeAsarEntry));
   const packagedEntries = Array.from(packagedFiles);
   assertSomeMatch(
     packagedEntries,
@@ -189,9 +193,15 @@ function main() {
   console.log(`[verify:desktop-package] unpacked app inspected at ${layout.unpackedDir}`);
 }
 
-try {
-  main();
-} catch (error) {
-  console.error("[verify:desktop-package] failed.", error);
-  process.exit(1);
+if (require.main === module) {
+  try {
+    main();
+  } catch (error) {
+    console.error("[verify:desktop-package] failed.", error);
+    process.exit(1);
+  }
 }
+
+module.exports = {
+  normalizeAsarEntry,
+};

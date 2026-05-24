@@ -82,3 +82,23 @@ test("desktop package verifier selects platform-specific unpacked app roots", ()
   assert.match(source, /mac-universal|mac-arm64|mac/);
   assert.match(source, /app-icon\.icns/);
 });
+
+test("desktop package verifier normalizes asar entry roots across platforms", () => {
+  const { normalizeAsarEntry } = require("../scripts/verify-desktop-package.cjs");
+
+  assert.equal(normalizeAsarEntry("/dist/runtime/server.js"), "dist/runtime/server.js");
+  assert.equal(normalizeAsarEntry("\\dist\\runtime\\server.js"), "dist/runtime/server.js");
+});
+
+test("electron-builder wrapper keeps pnpm traversal patch enabled for macOS builds", () => {
+  const source = fs.readFileSync(path.join(repoRoot, "desktop", "scripts", "run-electron-builder.cjs"), "utf8");
+  const traversalPatchIndex = source.indexOf("ensurePatchedAppFileCopier();");
+  const windowsBranchIndex = source.indexOf("if (needsWindowsPackaging)");
+
+  assert.ok(traversalPatchIndex > 0, "app file copier patch must be called");
+  assert.ok(windowsBranchIndex > 0, "wrapper must keep the Windows-specific branch");
+  assert.ok(
+    traversalPatchIndex < windowsBranchIndex,
+    "pnpm traversal patch must run before the Windows-only NSIS branch",
+  );
+});
