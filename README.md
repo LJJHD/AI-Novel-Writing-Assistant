@@ -24,13 +24,14 @@
 - 👉 控制写作风格与叙事一致性
 - 👉 最终生成完整章节甚至整本小说
 
-## Windows 桌面版
+## 桌面版
 
 如果你只是想直接下载安装并开始使用，优先从桌面版入口进入：
 
 - 下载入口：[GitHub Releases](https://github.com/ExplosiveCoderflome/AI-Novel-Writing-Assistant/releases)
 - 最新版本页：[Latest Release](https://github.com/ExplosiveCoderflome/AI-Novel-Writing-Assistant/releases/latest)
-- 建议优先下载 `Setup.exe` 安装版；如果你不想安装，或者想放在 U 盘 / 临时目录里直接运行，再选择 `portable` 版本
+- Windows 建议优先下载 `Setup.exe` 安装版；如果你不想安装，或者想放在 U 盘 / 临时目录里直接运行，再选择 `portable` 版本
+- macOS 可以从源码构建 `dmg` / `zip` 桌面包；本地自用包适合个人安装测试，公开分发仍需要 Apple Developer 签名和公证
 
 
 
@@ -124,16 +125,14 @@
 
 完整历史更新见 [docs/releases/release-notes.md](./docs/releases/release-notes.md)。
 
-### 2026-05-22
+### 2026-05-24
 
-重大更新：最近几天在 `beta` 验证过的封面生成、章节稳定性和自动导演恢复能力现在一起进入主线版本，开书后的封面准备、章节推进和任务恢复都会更顺。
+桌面端开始支持生成 macOS 本地安装包。使用 Apple Silicon 的 Mac 可以直接构建 `dmg` / `zip` 产物，用于个人安装和测试；Windows 安装版与 portable 版的下载和构建方式保持不变。
 
-- 小说基础信息页现在可以直接生成和管理封面主画面；系统会先根据当前小说信息整理封面输入草稿，再继续用 AI 优化或手动改成最终图片 Prompt。
-- 封面图会直接进入当前小说的封面图库；如果本书还没有当前封面，第一张成功图会自动设为主图，任务中心和恢复入口也会直接回到这本书的基础信息页。
-- 章节执行区现在会把本章概览、时间线、角色动态和资源风险拆到更清楚的右侧工作区，逐章写作和排查卡点时更容易直接看清当前章到底缺什么。
-- 正文后的接收闸门会并行处理审校和时间线检测；只有明确要求下一章立刻承接的钩子才会进入硬阻断，中长期伏笔会保留为提示，不再把所有伏笔都当成立刻失败项。
-- 自动导演继续执行、现有项目接管和质量债务判断更稳；当章节可以继续推进时，系统会保留清晰的任务状态和执行范围，而不是把非阻塞提醒混成失败或反复卡在同一检查点。
-- 角色阵容应用后会更稳定地补齐外显资料，OpenAI 图像默认模型也切到 `gpt-image-2`；桌面客户端同步推进到 `0.3.14`，用于发布这一轮主线更新。
+- 可以执行 `pnpm run dist:desktop:mac` 生成 Apple Silicon 桌面包，也可以执行 `pnpm run dist:desktop:mac:x64` 生成 Intel Mac 桌面包。
+- macOS 桌面包会带上专用 `.icns` 应用图标，并复用桌面端内置本地服务、前端资源和 SQLite 数据目录。
+- 桌面包验证脚本可以按 Windows / macOS 分别检查打包后的资源目录，帮助在发布前发现缺少前端入口、本地服务入口或 Prisma 运行时的问题。
+- macOS 本地自用包适合个人安装测试；面向普通用户公开分发前仍需要 Apple Developer 签名和公证。
 
 ## 功能预览
 ### 功能概览中的95%以上编写都是AI完成
@@ -302,6 +301,28 @@ pnpm run prepare:desktop-runtime
 ```
 
 桌面端运行时首次下载需要可访问 Electron 分发源的网络环境；如果你所在网络无法访问 GitHub Releases，建议先配置代理或镜像后再执行桌面端命令。
+
+#### 1.1 构建桌面安装包
+
+Windows 安装包：
+
+```bash
+pnpm run dist:desktop:nsis
+```
+
+macOS Apple Silicon 安装包：
+
+```bash
+pnpm run dist:desktop:mac
+```
+
+macOS Intel 安装包：
+
+```bash
+pnpm run dist:desktop:mac:x64
+```
+
+生成的桌面产物位于 `desktop/build/dist/`。macOS 本地自用包会生成 `dmg` 和 `zip`；如果要面向普通用户公开分发，请先准备 Apple Developer 签名身份和公证流程。
 
 如果你在 Windows 上执行 `pnpm install` 时卡在 `prisma preinstall`，通常先检查这两类问题：
 
@@ -611,4 +632,3 @@ docs/     设计文档、阶段检查点、模块计划与历史归档
 - 请遵守开源协议条款，并在适用场景下取得相应授权。
 
 贡献说明：新贡献默认按 [CLA.md](./CLA.md) 提交，可随项目按 AGPL-3.0-only 分发，并可纳入项目维护者另行提供的商业授权；详见 [CONTRIBUTING.md](./CONTRIBUTING.md)。
-

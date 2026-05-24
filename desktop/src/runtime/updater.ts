@@ -41,7 +41,7 @@ export function initializeDesktopUpdater(options: DesktopUpdaterOptions): Deskto
   const supported = isUpdaterSupported(options);
   const hasFeedConfig = !supported || hasPackagedUpdateFeedConfig();
   const unsupportedReason = !options.isPackaged
-    ? "Updates are only available from the packaged Windows build."
+    ? "Updates are only available from a packaged desktop build."
     : options.isPortable
       ? "Portable builds stay on manual updates and are excluded from auto-update."
       : !hasFeedConfig
