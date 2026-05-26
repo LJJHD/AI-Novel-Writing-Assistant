@@ -22,6 +22,8 @@
 - 用户在顶部切换厂商或模型后，前端应同步保存到服务端当前选择。
 - 没有保存模型的内置厂商不应因为 `PROVIDERS.*.defaultModel` 存在就被视为可运行；需要保存模型、环境模型或可拉取的模型目录。
 - 模型路由、结构化兜底和各任务的显式模型覆盖仍属于独立配置；它们不等同于顶部当前模型。
+- 自定义厂商入口面向 OpenAI 兼容网关。模型目录、普通连通性和结构化探针在未显式选择协议时都应默认走 OpenAI-compatible 路径，不应自动尝试 Anthropic `/messages`，否则中转服务可能因没有 Anthropic dispatch 权限而返回误导性的 403。
+- 只有内置 Anthropic 厂商的自动连通性探针可以优先走 Anthropic Messages 协议；自定义厂商若确实需要 Anthropic 协议，必须由模型路由等显式配置声明。
 
 ## 示例
 
@@ -42,6 +44,7 @@
 - 重启后顶部模型跳回旧默认：先查 `AppSetting.llm.currentSelection` 是否存在，再查前端是否完成水合，最后查当前厂商是否仍在 `/api/settings/api-keys` 的可运行列表中。
 - 顶部显示的模型不可用：检查厂商是否只有静态默认模型、是否没有保存模型、模型目录是否拉取失败。
 - 设置页能看到厂商但顶部没有它：确认 `isConfigured`、`isActive` 和模型列表是否同时满足，未配置模型的厂商不应进入顶部候选。
+- 自定义厂商能拉取模型但连接测试报 `Anthropic request failed` 或 `/v1/messages dispatch`：先确认连接探针是否错误进入 Anthropic 协议。OpenAI 兼容中转应使用带 `/v1` 的 baseURL，并通过 OpenAI-compatible chat/structured probe 验证。
 
 ## 相关模块
 
@@ -49,6 +52,8 @@
 - `server/src/routes/settings/llmSelectionRoutes.ts`
 - `server/src/routes/settings.ts`
 - `server/src/llm/modelCatalog.ts`
+- `server/src/llm/connectivity.ts`
+- `server/src/llm/protocolCandidates.ts`
 - `client/src/components/layout/LLMSelectionBootstrap.tsx`
 - `client/src/components/common/LLMSelector.tsx`
 - `client/src/store/llmStore.ts`

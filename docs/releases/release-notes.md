@@ -4,6 +4,14 @@
 
 ## 更新历史
 
+### 2026-05-26
+
+自定义模型厂商连接测试更适合 OpenAI 兼容中转。像 AIPORT 这类需要 `/v1` 模型目录的网关，会按 OpenAI 兼容协议进行普通连通和结构化探针，避免误走 Anthropic Messages 接口导致权限报错。
+
+- 新增自定义厂商时，API 地址继续建议填写到兼容接口根路径，例如 `https://www.ai-port.uk/v1`。
+- 连接测试会保留普通连通和结构化兼容性检查，但自定义 OpenAI 兼容厂商不会自动尝试 Anthropic `/messages`。
+- 如果确实要让某个自定义厂商走 Anthropic 协议，可以在模型路由中显式配置对应请求协议。
+
 ### 2026-05-24
 
 桌面端开始支持生成 macOS 本地安装包。使用 Apple Silicon 的 Mac 可以直接构建 `dmg` / `zip` 产物，用于个人安装和测试；Windows 安装版与 portable 版的下载和构建方式保持不变。

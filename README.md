@@ -125,14 +125,13 @@
 
 完整历史更新见 [docs/releases/release-notes.md](./docs/releases/release-notes.md)。
 
-### 2026-05-24
+### 2026-05-26
 
-桌面端开始支持生成 macOS 本地安装包。使用 Apple Silicon 的 Mac 可以直接构建 `dmg` / `zip` 产物，用于个人安装和测试；Windows 安装版与 portable 版的下载和构建方式保持不变。
+自定义模型厂商连接测试更适合 OpenAI 兼容中转。像 AIPORT 这类需要 `/v1` 模型目录的网关，会按 OpenAI 兼容协议进行普通连通和结构化探针，避免误走 Anthropic Messages 接口导致权限报错。
 
-- 可以执行 `pnpm run dist:desktop:mac` 生成 Apple Silicon 桌面包，也可以执行 `pnpm run dist:desktop:mac:x64` 生成 Intel Mac 桌面包。
-- macOS 桌面包会带上专用 `.icns` 应用图标，并复用桌面端内置本地服务、前端资源和 SQLite 数据目录。
-- 桌面包验证脚本可以按 Windows / macOS 分别检查打包后的资源目录，帮助在发布前发现缺少前端入口、本地服务入口或 Prisma 运行时的问题。
-- macOS 本地自用包适合个人安装测试；面向普通用户公开分发前仍需要 Apple Developer 签名和公证。
+- 新增自定义厂商时，API 地址继续建议填写到兼容接口根路径，例如 `https://www.ai-port.uk/v1`。
+- 连接测试会保留普通连通和结构化兼容性检查，但自定义 OpenAI 兼容厂商不会自动尝试 Anthropic `/messages`。
+- 如果确实要让某个自定义厂商走 Anthropic 协议，可以在模型路由中显式配置对应请求协议。
 
 ## 功能预览
 ### 功能概览中的95%以上编写都是AI完成

@@ -19,6 +19,7 @@ import {
   selectStructuredOutputStrategy,
   type StructuredOutputStrategy,
 } from "./structuredOutput";
+import { resolveConnectivityProtocolCandidates } from "./protocolCandidates";
 
 export type ConnectivityProbeMode = "plain" | "structured" | "both";
 
@@ -60,13 +61,6 @@ function toErrorMessage(error: unknown): string {
     return error.message.trim();
   }
   return "连接测试失败。";
-}
-
-function getProtocolCandidates(preferred?: ModelRouteRequestProtocol): ModelRouteRequestProtocol[] {
-  if (preferred === "openai_compatible" || preferred === "anthropic") {
-    return [preferred, preferred === "anthropic" ? "openai_compatible" : "anthropic"];
-  }
-  return ["openai_compatible", "anthropic"];
 }
 
 function getStructuredFormatCandidates(input: {
@@ -295,7 +289,10 @@ async function testConnection(input: {
   let plain: LLMConnectivityStatus | null = null;
   let structured: LLMConnectivityStatus | null = null;
   if (probeMode === "plain" || probeMode === "both") {
-    for (const requestProtocol of getProtocolCandidates(input.requestProtocol)) {
+    for (const requestProtocol of resolveConnectivityProtocolCandidates({
+      provider: input.provider,
+      preferred: input.requestProtocol,
+    })) {
       plain = await testPlainConnection({ ...input, requestProtocol });
       if (plain.ok) {
         break;
@@ -303,7 +300,10 @@ async function testConnection(input: {
     }
   }
   if (probeMode === "structured" || probeMode === "both") {
-    for (const requestProtocol of getProtocolCandidates(input.requestProtocol)) {
+    for (const requestProtocol of resolveConnectivityProtocolCandidates({
+      provider: input.provider,
+      preferred: input.requestProtocol,
+    })) {
       for (const structuredResponseFormat of getStructuredFormatCandidates({
         provider: input.provider,
         model: input.model,
