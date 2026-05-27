@@ -20,6 +20,8 @@ import {
   type StructuredOutputStrategy,
 } from "./structuredOutput";
 import { resolveConnectivityProtocolCandidates } from "./protocolCandidates";
+import { normalizeConnectivityErrorMessage } from "./connectivityError";
+import { probeOpenAICompatibleChat } from "./openaiCompatibleProbe";
 
 export type ConnectivityProbeMode = "plain" | "structured" | "both";
 
@@ -57,10 +59,7 @@ export interface ModelRouteConnectivityStatus extends LLMConnectivityStatus {
 }
 
 function toErrorMessage(error: unknown): string {
-  if (error instanceof Error && error.message.trim()) {
-    return error.message.trim();
-  }
-  return "连接测试失败。";
+  return normalizeConnectivityErrorMessage(error);
 }
 
 function getStructuredFormatCandidates(input: {
@@ -109,16 +108,25 @@ async function testPlainConnection(input: {
       maxTokens: 16,
       requestProtocol: input.requestProtocol,
     });
-    const llm = await getLLM(input.provider, {
-      apiKey: input.apiKey,
-      baseURL: input.baseURL,
-      model: resolved.model,
-      temperature: 0.1,
-      maxTokens: 16,
-      requestProtocol: resolved.requestProtocol,
-    });
     const start = Date.now();
-    await llm.invoke([new HumanMessage("请只回复 ok")]);
+    if (resolved.requestProtocol === "openai_compatible") {
+      await probeOpenAICompatibleChat({
+        apiKey: resolved.apiKey,
+        baseURL: resolved.baseURL,
+        model: resolved.model,
+        maxTokens: 16,
+      });
+    } else {
+      const llm = await getLLM(input.provider, {
+        apiKey: input.apiKey,
+        baseURL: input.baseURL,
+        model: resolved.model,
+        temperature: 0.1,
+        maxTokens: 16,
+        requestProtocol: resolved.requestProtocol,
+      });
+      await llm.invoke([new HumanMessage("请只回复 ok")]);
+    }
     const plain = {
       ok: true,
       latency: Date.now() - start,
