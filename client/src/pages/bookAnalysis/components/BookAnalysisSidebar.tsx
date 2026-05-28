@@ -1,6 +1,7 @@
 import type { BookAnalysis, BookAnalysisStatus } from "@ai-novel/shared/types/bookAnalysis";
 import type { KnowledgeDocumentDetail, KnowledgeDocumentSummary } from "@ai-novel/shared/types/knowledge";
 import LLMSelector from "@/components/common/LLMSelector";
+import SelectField from "@/components/common/SelectField";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -62,38 +63,37 @@ export default function BookAnalysisSidebar(props: BookAnalysisSidebarProps) {
           <CardTitle>创建拆书分析</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <div className="text-sm font-medium">知识文档</div>
-            <select
-              className="h-10 w-full rounded-md border bg-background px-3 text-sm"
-              value={selectedDocumentId}
-              onChange={(event) => onSelectDocument(event.target.value)}
-            >
-              <option value="">选择文档</option>
-              {documentOptions.map((document) => (
-                <option key={document.id} value={document.id}>
-                  {document.title}
-                </option>
-              ))}
-            </select>
-          </div>
+          <SelectField
+            label="知识文档"
+            value={selectedDocumentId}
+            onValueChange={onSelectDocument}
+            options={[
+              { value: "", label: "选择文档" },
+              ...documentOptions.map((document) => ({
+                value: document.id,
+                label: document.title,
+              })),
+            ]}
+            placeholder="选择文档"
+            emptyText="暂无可选知识文档"
+            triggerClassName="h-10 rounded-md"
+          />
 
-          <div className="space-y-2">
-            <div className="text-sm font-medium">文档版本</div>
-            <select
-              className="h-10 w-full rounded-md border bg-background px-3 text-sm"
-              value={selectedVersionId}
-              onChange={(event) => onSelectVersion(event.target.value)}
-              disabled={!selectedDocumentId}
-            >
-              <option value="">使用当前激活版本</option>
-              {versionOptions.map((version) => (
-                <option key={version.id} value={version.id}>
-                  v{version.versionNumber} {version.isActive ? "（当前）" : ""}
-                </option>
-              ))}
-            </select>
-          </div>
+          <SelectField
+            label="文档版本"
+            value={selectedVersionId}
+            onValueChange={onSelectVersion}
+            options={[
+              { value: "", label: "使用当前激活版本" },
+              ...versionOptions.map((version) => ({
+                value: version.id,
+                label: `v${version.versionNumber} ${version.isActive ? "（当前）" : ""}`.trim(),
+              })),
+            ]}
+            placeholder="使用当前激活版本"
+            disabled={!selectedDocumentId}
+            triggerClassName="h-10 rounded-md"
+          />
 
           <div className="space-y-2">
             <div className="text-sm font-medium">模型</div>
