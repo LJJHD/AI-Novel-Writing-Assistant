@@ -490,7 +490,7 @@ export function buildMilestones(row: Pick<FollowUpWorkflowRow, "milestonesJson" 
     label: buildMilestoneLabel(milestone),
     at: milestone.createdAt,
     status: row.status,
-    summary: milestone.summary,
+    summary: normalizeOptionalFailureText(milestone.summary) ?? milestone.summary,
   }));
 }
 

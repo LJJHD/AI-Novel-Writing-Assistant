@@ -16,6 +16,7 @@ import {
   getArchivedTaskIds,
   isTaskArchived,
 } from "../taskArchive";
+import { normalizeOptionalFailureText } from "../taskSupport";
 import { getAutoDirectorChannelSettings } from "../../settings/AutoDirectorChannelSettingsService";
 import {
   buildAvailableReasons,
@@ -175,7 +176,7 @@ export class AutoDirectorFollowUpService {
       reasonLabel: item.reasonLabel,
       priority: item.priority,
       followUpSummary: item.followUpSummary,
-      checkpointSummary: row.checkpointSummary,
+      checkpointSummary: normalizeOptionalFailureText(row.checkpointSummary),
       blockingReason: item.blockingReason,
       nextStepSuggestion: task.nextActionLabel ?? task.resumeAction ?? item.availableActions[0]?.label ?? null,
       validationSummary: item.validationSummary ?? null,

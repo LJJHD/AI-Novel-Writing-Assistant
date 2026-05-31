@@ -25,7 +25,7 @@ import {
   PROVIDERS,
   resolveProviderBaseUrl,
 } from "./providers";
-import { appendLlmSessionLog } from "./sessionLogFile";
+import { appendLlmDiagnosticSessionLog } from "./sessionLogFile";
 import { createOpenAICompatibleDiagnosticFetch } from "./openaiCompatibleResponseDiagnostics";
 
 interface LLMOptions {
@@ -372,7 +372,7 @@ export function createLLMFromResolvedOptions(resolved: ResolvedLLMClientOptions)
           provider: resolved.provider,
           model: resolved.model,
           baseURL: resolved.baseURL,
-          logEvent: appendLlmSessionLog,
+          logEvent: appendLlmDiagnosticSessionLog,
         }),
       },
     });
