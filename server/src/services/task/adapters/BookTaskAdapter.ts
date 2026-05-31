@@ -11,6 +11,7 @@ import {
   buildTaskRecoveryHint,
   isArchivableTaskStatus,
   normalizeFailureSummary,
+  normalizeOptionalFailureText,
   resolveStructuredFailureSummary,
 } from "../taskSupport";
 import {
@@ -89,7 +90,7 @@ export class BookTaskAdapter {
         currentItemLabel: row.currentItemLabel,
         attemptCount: row.attemptCount,
         maxAttempts: row.maxAttempts,
-        lastError: row.lastError,
+        lastError: normalizeOptionalFailureText(row.lastError),
         createdAt: row.createdAt.toISOString(),
         updatedAt: row.updatedAt.toISOString(),
         heartbeatAt: row.heartbeatAt?.toISOString() ?? null,
@@ -101,7 +102,7 @@ export class BookTaskAdapter {
           : null,
         failureSummary: normalizedStatus === "failed"
           ? (structuredFailure.failureSummary ?? normalizeFailureSummary(row.lastError, "拆书任务失败，但没有记录明确错误。"))
-          : row.lastError,
+          : normalizeOptionalFailureText(row.lastError),
         recoveryHint: buildTaskRecoveryHint("book_analysis", mappedStatus),
         sourceResource: {
           type: "knowledge_document",
@@ -159,7 +160,7 @@ export class BookTaskAdapter {
       currentItemLabel: row.currentItemLabel,
       attemptCount: row.attemptCount,
       maxAttempts: row.maxAttempts,
-      lastError: row.lastError,
+      lastError: normalizeOptionalFailureText(row.lastError),
       createdAt: row.createdAt.toISOString(),
       updatedAt: row.updatedAt.toISOString(),
       heartbeatAt: row.heartbeatAt?.toISOString() ?? null,
@@ -171,7 +172,7 @@ export class BookTaskAdapter {
         : null,
       failureSummary: normalizedStatus === "failed"
         ? (structuredFailure.failureSummary ?? normalizeFailureSummary(row.lastError, "拆书任务失败，但没有记录明确错误。"))
-        : row.lastError,
+        : normalizeOptionalFailureText(row.lastError),
       recoveryHint: buildTaskRecoveryHint("book_analysis", status),
       sourceResource: {
         type: "knowledge_document",
@@ -205,7 +206,7 @@ export class BookTaskAdapter {
         summary.createdAt,
         summary.updatedAt,
       ),
-      failureDetails: row.lastError,
+      failureDetails: normalizeOptionalFailureText(row.lastError),
     };
   }
 

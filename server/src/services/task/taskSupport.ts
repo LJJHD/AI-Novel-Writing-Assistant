@@ -4,12 +4,16 @@ import {
 } from "../../llm/structuredOutput";
 import { summarizeStructuredOutputFailure } from "../../llm/structuredInvoke";
 
-export function normalizeFailureSummary(summary?: string | null, fallback = "当前没有明确失败记录。"): string {
+export function normalizeTaskFailureText(summary?: string | null, fallback = "当前没有明确失败记录。"): string {
   const trimmed = summary?.trim();
   if (!trimmed) {
     return fallback;
   }
   return resolveStructuredFailureSummary(trimmed).failureSummary ?? trimmed;
+}
+
+export function normalizeFailureSummary(summary?: string | null, fallback = "当前没有明确失败记录。"): string {
+  return normalizeTaskFailureText(summary, fallback);
 }
 
 export function normalizeOptionalFailureText(summary?: string | null): string | null {

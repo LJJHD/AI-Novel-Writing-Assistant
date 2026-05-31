@@ -7,6 +7,7 @@ import type {
   DirectorRuntimeProjection,
   DirectorStepRun,
 } from "@ai-novel/shared/types/directorRuntime";
+import { normalizeOptionalFailureText } from "../../task/taskSupport";
 
 export function parseJsonOrNull<T>(value: string | null | undefined): T | null {
   if (!value?.trim()) {
@@ -207,7 +208,9 @@ function getTaskFailureReason(task: {
   lastError?: string | null;
   checkpointSummary?: string | null;
 } | null | undefined): string | null {
-  return task?.lastError?.trim() || task?.checkpointSummary?.trim() || null;
+  return normalizeOptionalFailureText(task?.lastError)?.trim()
+    || normalizeOptionalFailureText(task?.checkpointSummary)?.trim()
+    || null;
 }
 
 export function buildDetail(input: {
@@ -220,7 +223,8 @@ export function buildDetail(input: {
   } | null;
 }): string | null {
   if (input.status === "waiting_recovery") {
-    return input.task?.lastError?.trim() || "后台执行中断后保留了进度点，确认恢复后会从最近进展继续。";
+    return normalizeOptionalFailureText(input.task?.lastError)?.trim()
+      || "后台执行中断后保留了进度点，确认恢复后会从最近进展继续。";
   }
   if (input.status === "cancelled") {
     return "自动导演任务已取消。";
@@ -234,8 +238,9 @@ export function buildDetail(input: {
   if (input.runtimeProjection?.detail?.trim()) {
     return input.runtimeProjection.detail.trim();
   }
-  if (input.task?.checkpointSummary?.trim()) {
-    return input.task.checkpointSummary.trim();
+  const checkpointSummary = normalizeOptionalFailureText(input.task?.checkpointSummary)?.trim();
+  if (checkpointSummary) {
+    return checkpointSummary;
   }
   if (input.status === "idle") {
     return "可以从 AI 自动导演开始，让系统根据这本书的资产推荐下一步。";
@@ -398,8 +403,8 @@ export function buildUserReason(input: {
       || input.detail?.trim()
       || input.runtimeProjection?.blockedReason?.trim()
       || input.runtimeProjection?.detail?.trim()
-      || input.task?.checkpointSummary?.trim()
-      || input.task?.lastError?.trim()
+      || normalizeOptionalFailureText(input.task?.checkpointSummary)?.trim()
+      || normalizeOptionalFailureText(input.task?.lastError)?.trim()
     );
   if (directReason) {
     return directReason;

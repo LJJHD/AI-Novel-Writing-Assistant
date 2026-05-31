@@ -573,7 +573,7 @@ export class NovelWorkflowTaskAdapter {
       meta: {
         lane: row.lane,
         checkpointType: row.checkpointType,
-        checkpointSummary: row.checkpointSummary,
+        checkpointSummary: summary.checkpointSummary,
         resumeTarget,
         directorSession: responseDirectorSession,
         llm: boundLlm
@@ -601,7 +601,7 @@ export class NovelWorkflowTaskAdapter {
         createdAt: summary.createdAt,
         updatedAt: summary.updatedAt,
       }),
-      failureDetails: row.lastError,
+      failureDetails: normalizeOptionalFailureText(row.lastError),
     };
   }
 

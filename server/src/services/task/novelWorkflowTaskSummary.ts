@@ -58,7 +58,7 @@ export function mapNovelAutoDirectorTaskSummary(
     currentStage: row.currentStage,
     currentItemKey: row.currentItemKey,
     checkpointType,
-    lastError: row.lastError,
+    lastError: normalizeOptionalFailureText(row.lastError),
     executionScopeLabel,
   });
   return {

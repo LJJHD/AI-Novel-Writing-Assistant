@@ -8,6 +8,7 @@ import type {
 } from "@ai-novel/shared/types/directorRuntime";
 import { getDirectorNodeDisplayLabel } from "@ai-novel/shared/types/directorRuntime";
 import { prisma } from "../../../db/prisma";
+import { normalizeOptionalFailureText } from "../../task/taskSupport";
 import { loadPersistentDirectorRuntimeProjection } from "./novelDirectorRuntimeProjection";
 import { directorArtifactLedgerQueryService } from "./runtime/DirectorArtifactLedgerQueryService";
 import { directorUsageTelemetryQueryService } from "./runtime/DirectorUsageTelemetryQueryService";
@@ -499,8 +500,8 @@ export class DirectorBookAutomationProjectionService {
         type: "task" as const,
         title: latestTask.currentItemLabel?.trim() || latestTask.title,
         detail: latestTask.status === "failed"
-          ? latestTask.lastError || latestTask.checkpointSummary
-          : latestTask.checkpointSummary || latestTask.lastError,
+          ? normalizeOptionalFailureText(latestTask.lastError) || normalizeOptionalFailureText(latestTask.checkpointSummary)
+          : normalizeOptionalFailureText(latestTask.checkpointSummary) || normalizeOptionalFailureText(latestTask.lastError),
         status: latestTask.status,
         taskId: latestTask.id,
         occurredAt: toIso(latestTask.updatedAt),
@@ -525,9 +526,9 @@ export class DirectorBookAutomationProjectionService {
           currentItemKey: latestTask.currentItemKey,
           currentItemLabel: latestTask.currentItemLabel,
           checkpointType: latestTask.checkpointType,
-          checkpointSummary: latestTask.checkpointSummary,
+          checkpointSummary: normalizeOptionalFailureText(latestTask.checkpointSummary),
           pendingManualRecovery: latestTask.pendingManualRecovery,
-          lastError: latestTask.lastError,
+          lastError: normalizeOptionalFailureText(latestTask.lastError),
           updatedAt: toIso(latestTask.updatedAt),
         }
         : null,
