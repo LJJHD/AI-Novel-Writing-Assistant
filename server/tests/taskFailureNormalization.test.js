@@ -8,7 +8,8 @@ const STRUCTURED_EMPTY_RESPONSE_ERROR = "[STRUCTURED_OUTPUT:transport_error] Can
 test("task visible failure text normalizes structured transport errors", () => {
   const text = normalizeTaskFailureText(STRUCTURED_EMPTY_RESPONSE_ERROR);
 
-  assert.match(text, /模型返回了空响应/);
-  assert.match(text, /授权可用的文本模型/);
+  assert.match(text, /没有拿到标准 OpenAI Chat Completion 消息/);
+  assert.match(text, /API URL/);
+  assert.match(text, /中转平台是否已授权/);
   assert.doesNotMatch(text, /Cannot read properties/);
 });

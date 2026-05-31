@@ -42,7 +42,7 @@ test("empty OpenAI-compatible chat responses are reported as provider response f
     normalizeConnectivityErrorMessage(
       new TypeError("Cannot read properties of undefined (reading 'message')"),
     ),
-    /模型返回了空响应/,
+    /没有拿到标准 OpenAI Chat Completion 消息/,
   );
 });
 
@@ -78,6 +78,6 @@ test("OpenAI-compatible probes reject empty choices with an actionable message",
         headers: { "content-type": "application/json" },
       }),
     }),
-    /模型返回了空响应/,
+    /choices 为空/,
   );
 });

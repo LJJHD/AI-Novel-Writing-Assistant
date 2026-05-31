@@ -72,7 +72,7 @@ test("workflow explainability normalizes historical structured transport errors"
     lastError: "[STRUCTURED_OUTPUT:transport_error] Cannot read properties of undefined (reading 'message')",
   });
 
-  assert.match(result.blockingReason, /模型返回了空响应/);
-  assert.match(result.blockingReason, /授权可用的文本模型/);
+  assert.match(result.blockingReason, /没有拿到标准 OpenAI Chat Completion 消息/);
+  assert.match(result.blockingReason, /中转平台是否已授权/);
   assert.doesNotMatch(result.blockingReason, /Cannot read properties/);
 });

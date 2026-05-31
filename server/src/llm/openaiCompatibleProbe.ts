@@ -1,5 +1,8 @@
 type FetchLike = (url: string, init: RequestInit) => Promise<Response>;
 
+const NON_STANDARD_CHAT_COMPLETION_MESSAGE = "模型调用没有拿到标准 OpenAI Chat Completion 消息";
+const NON_STANDARD_CHAT_COMPLETION_GUIDANCE = "请检查 API URL 是否指向 /v1 兼容接口、当前模型是否支持聊天补全、请求协议是否选为 OpenAI 兼容，以及中转平台是否已授权该文本模型。";
+
 interface OpenAICompatibleProbeInput {
   apiKey?: string;
   baseURL: string;
@@ -65,6 +68,30 @@ function hasAssistantMessage(payload: unknown): boolean {
   return Boolean(message && typeof message === "object");
 }
 
+function describePayloadShape(payload: unknown): string {
+  if (!payload || typeof payload !== "object") {
+    return "响应不是 JSON 对象";
+  }
+  const record = payload as { choices?: unknown };
+  const keys = Object.keys(record).slice(0, 8);
+  const keySummary = keys.length > 0 ? `；顶层字段：${keys.join(", ")}` : "";
+  if (!Array.isArray(record.choices)) {
+    return `choices 缺失或不是数组${keySummary}`;
+  }
+  if (record.choices.length === 0) {
+    return `choices 为空${keySummary}`;
+  }
+  const first = record.choices[0];
+  if (!first || typeof first !== "object") {
+    return `choices[0] 不是对象${keySummary}`;
+  }
+  const message = (first as { message?: unknown }).message;
+  if (!message || typeof message !== "object") {
+    return `choices[0].message 缺失或不是对象${keySummary}`;
+  }
+  return `choices[0].message 可用${keySummary}`;
+}
+
 export async function probeOpenAICompatibleChat(input: OpenAICompatibleProbeInput): Promise<void> {
   const fetchImpl = input.fetchImpl ?? fetch;
   const response = await fetchImpl(`${normalizeBaseURL(input.baseURL)}/chat/completions`, {
@@ -86,6 +113,6 @@ export async function probeOpenAICompatibleChat(input: OpenAICompatibleProbeInpu
     throw new Error(`OpenAI 兼容请求失败（${response.status}）：${extractGatewayErrorMessage(payload, responseText)}`);
   }
   if (!hasAssistantMessage(payload)) {
-    throw new Error("模型返回了空响应。请确认当前模型支持 OpenAI 兼容的聊天补全接口，并选择一个已在中转平台授权可用的文本模型后重试。");
+    throw new Error(`${NON_STANDARD_CHAT_COMPLETION_MESSAGE}（HTTP ${response.status}，响应结构：${describePayloadShape(payload)}）。${NON_STANDARD_CHAT_COMPLETION_GUIDANCE}`);
   }
 }

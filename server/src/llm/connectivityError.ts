@@ -10,7 +10,7 @@ export function normalizeConnectivityErrorMessage(error: unknown): string {
       : "";
 
   if (isEmptyOpenAIChatResponseError(message)) {
-    return "模型返回了空响应。请确认当前模型支持 OpenAI 兼容的聊天补全接口，并选择一个已在中转平台授权可用的文本模型后重试。";
+    return "模型调用没有拿到标准 OpenAI Chat Completion 消息。请检查 API URL 是否指向 /v1 兼容接口、当前模型是否支持聊天补全、请求协议是否选为 OpenAI 兼容，以及中转平台是否已授权该文本模型。";
   }
 
   return message || "连接测试失败。";

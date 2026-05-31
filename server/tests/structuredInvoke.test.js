@@ -239,9 +239,9 @@ test("summarizeStructuredOutputFailure explains empty OpenAI-compatible response
 
   assert.equal(summary.category, "transport_error");
   assert.equal(summary.failureCode, "STRUCTURED_OUTPUT_TRANSPORT_ERROR");
-  assert.match(summary.summary, /模型返回了空响应/);
+  assert.match(summary.summary, /没有拿到标准 OpenAI Chat Completion 消息/);
   assert.match(summary.summary, /OpenAI 兼容/);
-  assert.match(summary.summary, /授权可用的文本模型/);
+  assert.match(summary.summary, /中转平台是否已授权/);
   assert.doesNotMatch(summary.summary, /Cannot read properties/);
 });
 
@@ -301,8 +301,8 @@ test("invokeStructuredLlmDetailed wraps empty OpenAI-compatible responses with a
       }),
       (error) => {
         assert.match(error.message, /STRUCTURED_OUTPUT:transport_error/);
-        assert.match(error.message, /模型返回了空响应/);
-        assert.match(error.message, /授权可用的文本模型/);
+        assert.match(error.message, /没有拿到标准 OpenAI Chat Completion 消息/);
+        assert.match(error.message, /中转平台是否已授权/);
         assert.doesNotMatch(error.message, /Cannot read properties/);
         return true;
       },
