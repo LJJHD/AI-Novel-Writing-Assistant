@@ -25,6 +25,8 @@ import {
   PROVIDERS,
   resolveProviderBaseUrl,
 } from "./providers";
+import { appendLlmSessionLog } from "./sessionLogFile";
+import { createOpenAICompatibleDiagnosticFetch } from "./openaiCompatibleResponseDiagnostics";
 
 interface LLMOptions {
   model?: string;
@@ -366,6 +368,12 @@ export function createLLMFromResolvedOptions(resolved: ResolvedLLMClientOptions)
       __includeRawResponse: resolved.includeRawResponse,
       configuration: {
         baseURL: resolved.baseURL,
+        fetch: createOpenAICompatibleDiagnosticFetch({
+          provider: resolved.provider,
+          model: resolved.model,
+          baseURL: resolved.baseURL,
+          logEvent: appendLlmSessionLog,
+        }),
       },
     });
   const meta = {

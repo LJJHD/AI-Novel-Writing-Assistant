@@ -417,10 +417,13 @@ export function summarizeStructuredOutputFailure(input: {
     ? input.error.category
     : extractStructuredOutputErrorCategory(message) ?? classifyStructuredOutputFailure({ error: input.error });
   const suffix = input.fallbackAvailable ? "，可考虑启用结构化备用模型。" : "。";
-  const normalizedConnectivityMessage = normalizeConnectivityErrorMessage(input.error);
-  const transportErrorSummary = normalizedConnectivityMessage !== message && message.trim().length > 0
+  const structuredDetail = message.replace(/^\[STRUCTURED_OUTPUT:[a-z_]+\]\s*/iu, "").trim();
+  const normalizedConnectivityMessage = normalizeConnectivityErrorMessage(structuredDetail || input.error);
+  const transportErrorSummary = normalizedConnectivityMessage !== structuredDetail && structuredDetail.length > 0
     ? normalizedConnectivityMessage
-    : `结构化调用过程发生传输或服务端错误${suffix}`;
+    : structuredDetail.length > 0
+      ? `结构化调用过程发生传输或服务端错误：${structuredDetail}`
+      : `结构化调用过程发生传输或服务端错误${suffix}`;
   const incompleteJsonSummary = input.fallbackAvailable
     ? "模型输出的 JSON 被截断或不完整，可能是输出被截断或 token 上限不足；建议先重试，必要时切换更强模型或启用结构化备用模型。"
     : "模型输出的 JSON 被截断或不完整，可能是输出被截断或 token 上限不足；建议先重试，必要时切换更强模型。";

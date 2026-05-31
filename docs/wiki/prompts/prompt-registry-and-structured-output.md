@@ -47,7 +47,7 @@
 ## 失败模式
 
 - 模型返回 JSON 不稳定：先检查 schema、provider JSON 能力和 repair policy，不在业务 service 里补局部解析。
-- OpenAI 兼容中转如果没有返回标准 Chat Completion 消息，可能在 SDK 层表现为 `Cannot read properties of undefined (reading 'message')`。结构化输出层只能把这类传输异常归一为中性的模型端点诊断，并让任务中心、自动导演阻塞原因、检查点摘要复用同一归一化结果；不能在没有原始响应证据时断定是中转平台、模型授权或空响应。连接探针这类手写 `fetch` 路径应优先展示响应结构摘要，例如 `choices` 是否为空或 `choices[0].message` 是否缺失。
+- OpenAI 兼容中转如果没有返回标准 Chat Completion 消息，可能在 SDK 层表现为 `Cannot read properties of undefined (reading 'message')`。结构化输出层只能把这类传输异常归一为中性的模型端点诊断，并让任务中心、自动导演阻塞原因、检查点摘要复用同一归一化结果；不能在没有原始响应证据时断定是中转平台、模型授权或空响应。连接探针和 SDK `fetch` 诊断路径应优先展示响应结构摘要，例如 `choices` 是否为空或 `choices[0].message` 是否缺失；如果只拿到 `Connection error` 这类底层原因，也应保留在任务可见错误里，避免再次退化成泛化传输错误。
 - 同一 prompt 频繁进入 JSON repair：检查日志里的原始字段值是否来自上下文或示例中的非 schema 值。如果模型只是复用了 prompt 中出现的别名，应先修 prompt/schema 合同；如果输出语义完整但字段名是常见别名，应在 PromptAsset schema 层归一，而不是让后台任务无限重试。
 - Prompt Catalog 缺上下文预览：补 `contextRequirements`，不要让预览临时查数据库。
 - 意图识别漏判：修 PromptAsset、输入上下文、schema 或工具目录，不加关键词路由。

@@ -13,3 +13,11 @@ test("task visible failure text normalizes structured transport errors", () => {
   assert.match(text, /中转平台是否已授权/);
   assert.doesNotMatch(text, /Cannot read properties/);
 });
+
+test("task visible failure text preserves structured transport error details", () => {
+  const text = normalizeTaskFailureText("[STRUCTURED_OUTPUT:transport_error] Connection error.");
+
+  assert.match(text, /结构化调用过程发生传输或服务端错误/);
+  assert.match(text, /Connection error/);
+  assert.doesNotMatch(text, /错误。。/);
+});

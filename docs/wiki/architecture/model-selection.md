@@ -24,6 +24,7 @@
 - 模型路由、结构化兜底和各任务的显式模型覆盖仍属于独立配置；它们不等同于顶部当前模型。
 - 自定义厂商入口面向 OpenAI 兼容网关。模型目录、普通连通性和结构化探针在未显式选择协议时都应默认走 OpenAI-compatible 路径，不应自动尝试 Anthropic `/messages`，否则中转服务可能因没有 Anthropic dispatch 权限而返回误导性的 403。
 - OpenAI 兼容中转的普通连通性探针应保留中转返回的顶层错误信息，例如 `{ code, message }`。对于 HTTP 200 但不符合 Chat Completion 结构的响应，探针应展示响应结构摘要，例如 `choices` 是否为空或 `choices[0].message` 是否缺失。不能只依赖 SDK 对 OpenAI 响应的二次解析，否则非标准响应可能被改写成 `Cannot read properties of undefined (reading 'message')` 这类内部异常。
+- OpenAI-compatible 真实模型调用应在 SDK `fetch` 边界记录可脱敏的响应结构诊断。日志只记录 provider、model、baseURL、请求 URL、HTTP 状态、content-type、顶层结构摘要和网关错误信息，不记录 API Key。这样自动导演、章节链和连接测试能共用同一套排障证据。
 - 只有内置 Anthropic 厂商的自动连通性探针可以优先走 Anthropic Messages 协议；自定义厂商若确实需要 Anthropic 协议，必须由模型路由等显式配置声明。
 
 ## 示例

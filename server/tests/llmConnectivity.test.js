@@ -10,6 +10,9 @@ const {
 const {
   probeOpenAICompatibleChat,
 } = require("../dist/llm/openaiCompatibleProbe.js");
+const {
+  createOpenAICompatibleDiagnosticFetch,
+} = require("../dist/llm/openaiCompatibleResponseDiagnostics.js");
 
 test("custom providers default connectivity probes to OpenAI-compatible protocol", () => {
   assert.deepEqual(
@@ -80,4 +83,52 @@ test("OpenAI-compatible probes reject empty choices with an actionable message",
     }),
     /choices 为空/,
   );
+});
+
+test("OpenAI-compatible diagnostic fetch logs malformed chat completion shapes", async () => {
+  const entries = [];
+  const diagnosticFetch = createOpenAICompatibleDiagnosticFetch({
+    provider: "custom_aiport",
+    model: "gpt-5.5",
+    baseURL: "https://gateway.example.com/v1",
+    logEvent: (entry) => entries.push(entry),
+    fetchImpl: async () => new Response(JSON.stringify({
+      id: "chatcmpl-empty",
+      choices: [],
+    }), {
+      status: 200,
+      headers: { "content-type": "application/json" },
+    }),
+  });
+
+  const response = await diagnosticFetch("https://gateway.example.com/v1/chat/completions", {
+    method: "POST",
+  });
+
+  assert.equal(response.status, 200);
+  assert.equal(entries.length, 1);
+  assert.equal(entries[0].event, "openai_compatible_response_shape");
+  assert.equal(entries[0].provider, "custom_aiport");
+  assert.equal(entries[0].model, "gpt-5.5");
+  assert.match(entries[0].shape, /choices 为空/);
+});
+
+test("OpenAI-compatible diagnostic fetch ignores successful event streams", async () => {
+  const entries = [];
+  const diagnosticFetch = createOpenAICompatibleDiagnosticFetch({
+    provider: "custom_aiport",
+    model: "gpt-5.5",
+    baseURL: "https://gateway.example.com/v1",
+    logEvent: (entry) => entries.push(entry),
+    fetchImpl: async () => new Response("data: {}\n\n", {
+      status: 200,
+      headers: { "content-type": "text/event-stream" },
+    }),
+  });
+
+  await diagnosticFetch("https://gateway.example.com/v1/chat/completions", {
+    method: "POST",
+  });
+
+  assert.equal(entries.length, 0);
 });
