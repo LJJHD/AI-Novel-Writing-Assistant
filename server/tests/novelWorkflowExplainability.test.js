@@ -62,3 +62,17 @@ test("workflow explainability treats restart recovery as recovery-in-progress", 
   assert.equal(result.lastHealthyStage, "节奏 / 拆章");
   assert.equal(result.blockingReason, null);
 });
+
+test("workflow explainability normalizes historical structured transport errors", () => {
+  const result = buildWorkflowExplainability({
+    status: "failed",
+    currentStage: "自动导演",
+    currentItemKey: "auto_director",
+    checkpointType: null,
+    lastError: "[STRUCTURED_OUTPUT:transport_error] Cannot read properties of undefined (reading 'message')",
+  });
+
+  assert.match(result.blockingReason, /模型返回了空响应/);
+  assert.match(result.blockingReason, /授权可用的文本模型/);
+  assert.doesNotMatch(result.blockingReason, /Cannot read properties/);
+});

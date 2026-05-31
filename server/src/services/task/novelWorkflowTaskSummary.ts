@@ -4,6 +4,7 @@ import type { TaskStatus } from "@ai-novel/shared/types/task";
 import { buildWorkflowExplainability, buildWorkflowResumeAction } from "./novelWorkflowExplainability";
 import type { DirectorWorkflowSeedPayload } from "../novel/director/novelDirectorHelpers";
 import { parseSeedPayload } from "../novel/workflow/novelWorkflow.shared";
+import { normalizeOptionalFailureText } from "./taskSupport";
 
 export function buildNovelWorkflowNextActionLabel(
   status: TaskStatus,
@@ -73,7 +74,7 @@ export function mapNovelAutoDirectorTaskSummary(
     resumeAction: explainability.resumeAction,
     lastHealthyStage: explainability.lastHealthyStage,
     checkpointType,
-    checkpointSummary: row.checkpointSummary,
+    checkpointSummary: normalizeOptionalFailureText(row.checkpointSummary),
     nextActionLabel: buildNovelWorkflowNextActionLabel(
       status,
       checkpointType,

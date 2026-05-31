@@ -17,6 +17,7 @@ import {
 } from "./structuredOutput";
 import { extractJSONValue } from "../services/novel/novelP0Utils";
 import type { PromptInvocationMeta } from "../prompting/core/promptTypes";
+import { normalizeConnectivityErrorMessage } from "./connectivityError";
 
 export interface StructuredInvokeResult<T> {
   data: T;
@@ -313,9 +314,9 @@ export function wrapStructuredInvokeError(input: {
     rawContent: input.rawContent,
   });
   const message = input.error instanceof Error
-    ? input.error.message
+    ? normalizeConnectivityErrorMessage(input.error)
     : typeof input.error === "string"
-      ? input.error
+      ? normalizeConnectivityErrorMessage(input.error)
       : `[${input.label}] Structured output failed.`;
   return buildStructuredError({
     message,

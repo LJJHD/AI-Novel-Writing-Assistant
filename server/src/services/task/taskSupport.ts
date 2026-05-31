@@ -5,7 +5,19 @@ import {
 import { summarizeStructuredOutputFailure } from "../../llm/structuredInvoke";
 
 export function normalizeFailureSummary(summary?: string | null, fallback = "当前没有明确失败记录。"): string {
-  return summary?.trim() || fallback;
+  const trimmed = summary?.trim();
+  if (!trimmed) {
+    return fallback;
+  }
+  return resolveStructuredFailureSummary(trimmed).failureSummary ?? trimmed;
+}
+
+export function normalizeOptionalFailureText(summary?: string | null): string | null {
+  const trimmed = summary?.trim();
+  if (!trimmed) {
+    return summary ?? null;
+  }
+  return resolveStructuredFailureSummary(trimmed).failureSummary ?? trimmed;
 }
 
 export function resolveStructuredFailureSummary(summary?: string | null): {
