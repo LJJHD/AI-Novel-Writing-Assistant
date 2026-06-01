@@ -50,6 +50,35 @@ function shouldInspectChatCompletionResponse(url: string): boolean {
   }
 }
 
+function parseRequestBodyJson(init?: RequestInit): unknown {
+  const body = init?.body;
+  if (typeof body === "string") {
+    return safeParseJson(body);
+  }
+  if (body instanceof Uint8Array) {
+    return safeParseJson(Buffer.from(body).toString("utf8"));
+  }
+  return null;
+}
+
+function isKnownNonStreamingRequest(init?: RequestInit): boolean {
+  const payload = parseRequestBodyJson(init);
+  if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
+    return false;
+  }
+  return (payload as { stream?: unknown }).stream !== true;
+}
+
+function rebuildJsonResponse(response: Response, body: string): Response {
+  const headers = new Headers(response.headers);
+  headers.set("content-type", "application/json");
+  return new Response(body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers,
+  });
+}
+
 export function hasOpenAICompatibleAssistantMessage(payload: unknown): boolean {
   if (!payload || typeof payload !== "object") {
     return false;
@@ -132,11 +161,14 @@ export function createOpenAICompatibleDiagnosticFetch(
 
     try {
       const contentType = response.headers.get("content-type");
-      if (response.ok && contentType?.toLowerCase().includes("text/event-stream")) {
-        return response;
-      }
       const responseText = await response.clone().text();
       const payload = safeParseJson(responseText);
+      if (response.ok && contentType?.toLowerCase().includes("text/event-stream")) {
+        if (isKnownNonStreamingRequest(init) && hasOpenAICompatibleAssistantMessage(payload)) {
+          return rebuildJsonResponse(response, responseText);
+        }
+        return response;
+      }
       const shape = describeOpenAICompatibleChatPayloadShape(payload);
       if (response.ok && hasOpenAICompatibleAssistantMessage(payload)) {
         return response;

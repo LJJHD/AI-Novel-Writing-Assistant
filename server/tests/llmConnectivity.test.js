@@ -132,3 +132,34 @@ test("OpenAI-compatible diagnostic fetch ignores successful event streams", asyn
 
   assert.equal(entries.length, 0);
 });
+
+test("OpenAI-compatible diagnostic fetch normalizes mislabeled non-stream JSON chat responses", async () => {
+  const entries = [];
+  const diagnosticFetch = createOpenAICompatibleDiagnosticFetch({
+    provider: "custom_aiport",
+    model: "gpt-5.5",
+    baseURL: "https://gateway.example.com/v1",
+    logEvent: (entry) => entries.push(entry),
+    fetchImpl: async () => new Response(JSON.stringify({
+      id: "chatcmpl-json",
+      object: "chat.completion",
+      choices: [{
+        index: 0,
+        message: { role: "assistant", content: "{\"status\":\"ok\"}" },
+        finish_reason: "stop",
+      }],
+    }), {
+      status: 200,
+      headers: { "content-type": "text/event-stream" },
+    }),
+  });
+
+  const response = await diagnosticFetch("https://gateway.example.com/v1/chat/completions", {
+    method: "POST",
+    body: JSON.stringify({ stream: false }),
+  });
+
+  assert.equal(response.headers.get("content-type"), "application/json");
+  assert.match(await response.text(), /chatcmpl-json/);
+  assert.equal(entries.length, 0);
+});
