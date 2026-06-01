@@ -25,7 +25,7 @@
 - 自定义厂商入口面向 OpenAI 兼容网关。模型目录、普通连通性和结构化探针在未显式选择协议时都应默认走 OpenAI-compatible 路径，不应自动尝试 Anthropic `/messages`，否则中转服务可能因没有 Anthropic dispatch 权限而返回误导性的 403。
 - OpenAI 兼容中转的普通连通性探针应保留中转返回的顶层错误信息，例如 `{ code, message }`。对于 HTTP 200 但不符合 Chat Completion 结构的响应，探针应展示响应结构摘要，例如 `choices` 是否为空或 `choices[0].message` 是否缺失。不能只依赖 SDK 对 OpenAI 响应的二次解析，否则非标准响应可能被改写成 `Cannot read properties of undefined (reading 'message')` 这类内部异常。
 - OpenAI-compatible 真实模型调用应在 SDK `fetch` 边界记录可脱敏的响应结构诊断。日志只记录 provider、model、baseURL、请求 URL、HTTP 状态、content-type、顶层结构摘要和网关错误信息，不记录 API Key。这样自动导演、章节链和连接测试能共用同一套排障证据。
-- 部分中转会在 `stream: false` 的 Chat Completion 请求中返回标准 JSON 体，却把 `content-type` 标成 `text/event-stream`。这不是模型输出问题，而是响应头与请求模式不一致；SDK 可能按流式协议解析并抛出 `choices[0].message` 或 `map` 相关内部错误。OpenAI-compatible fetch 边界可以在同时满足“请求体明确不是流式”和“响应体已经是标准 Chat Completion JSON”时，把响应头归一为 `application/json`；真实流式响应必须保持原样。
+- 部分中转会在 `stream: false` 的 Chat Completion 请求中返回标准 JSON 体，却把 `content-type` 标成 `text/event-stream`。这不是模型输出问题，而是响应头与请求模式不一致；SDK 可能按流式协议解析并抛出 `choices[0].message` 或 `map` 相关内部错误。OpenAI-compatible fetch 边界可以在同时满足“请求体明确不是流式”和“响应体已经是标准 Chat Completion JSON”时，把响应头归一为 `application/json`；真实流式响应必须直接透传，不能为了诊断先读取 `clone().text()`，否则聊天、章节生成等流式入口会等到流结束才开始显示。
 - 只有内置 Anthropic 厂商的自动连通性探针可以优先走 Anthropic Messages 协议；自定义厂商若确实需要 Anthropic 协议，必须由模型路由等显式配置声明。
 
 ## 示例

@@ -161,10 +161,16 @@ export function createOpenAICompatibleDiagnosticFetch(
 
     try {
       const contentType = response.headers.get("content-type");
+      const isEventStream = response.ok && contentType?.toLowerCase().includes("text/event-stream");
+      const isNonStreamingRequest = isKnownNonStreamingRequest(init);
+      if (isEventStream && !isNonStreamingRequest) {
+        return response;
+      }
+
       const responseText = await response.clone().text();
       const payload = safeParseJson(responseText);
-      if (response.ok && contentType?.toLowerCase().includes("text/event-stream")) {
-        if (isKnownNonStreamingRequest(init) && hasOpenAICompatibleAssistantMessage(payload)) {
+      if (isEventStream) {
+        if (hasOpenAICompatibleAssistantMessage(payload)) {
           return rebuildJsonResponse(response, responseText);
         }
         return response;

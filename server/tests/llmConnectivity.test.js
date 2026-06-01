@@ -133,6 +133,41 @@ test("OpenAI-compatible diagnostic fetch ignores successful event streams", asyn
   assert.equal(entries.length, 0);
 });
 
+test("OpenAI-compatible diagnostic fetch returns true streaming chat responses without reading the stream", async () => {
+  const entries = [];
+  let closeStream = () => {};
+  const diagnosticFetch = createOpenAICompatibleDiagnosticFetch({
+    provider: "custom_aiport",
+    model: "gpt-5.5",
+    baseURL: "https://gateway.example.com/v1",
+    logEvent: (entry) => entries.push(entry),
+    fetchImpl: async () => new Response(new ReadableStream({
+      start(controller) {
+        controller.enqueue(new TextEncoder().encode("data: {\"choices\":[{\"delta\":{\"content\":\"ok\"}}]}\n\n"));
+        closeStream = () => controller.close();
+      },
+    }), {
+      status: 200,
+      headers: { "content-type": "text/event-stream" },
+    }),
+  });
+
+  const responsePromise = diagnosticFetch("https://gateway.example.com/v1/chat/completions", {
+    method: "POST",
+    body: JSON.stringify({ stream: true }),
+  });
+  const result = await Promise.race([
+    responsePromise,
+    new Promise((resolve) => setTimeout(() => resolve("timeout"), 50)),
+  ]);
+  closeStream();
+  await responsePromise.catch(() => {});
+
+  assert.notEqual(result, "timeout");
+  assert.equal(result.headers.get("content-type"), "text/event-stream");
+  assert.equal(entries.length, 0);
+});
+
 test("OpenAI-compatible diagnostic fetch normalizes mislabeled non-stream JSON chat responses", async () => {
   const entries = [];
   const diagnosticFetch = createOpenAICompatibleDiagnosticFetch({
