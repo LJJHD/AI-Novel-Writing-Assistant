@@ -8,6 +8,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 BUILDER_DIR = REPO_ROOT / "desktop" / "builder"
 PNG_SIZES = [32, 64, 128, 256, 512]
 ICO_SIZES = [(16, 16), (24, 24), (32, 32), (48, 48), (64, 64), (128, 128), (256, 256)]
+ICNS_SIZES = [(16, 16), (32, 32), (64, 64), (128, 128), (256, 256), (512, 512), (1024, 1024)]
 
 
 def lerp_color(left: tuple[int, int, int], right: tuple[int, int, int], progress: float) -> tuple[int, int, int]:
@@ -116,6 +117,7 @@ def main() -> None:
 
     generated_images[512].save(BUILDER_DIR / "app-icon.png")
     generated_images[512].save(BUILDER_DIR / "app-icon.ico", sizes=ICO_SIZES)
+    create_brand_icon(1024).save(BUILDER_DIR / "app-icon.icns", sizes=ICNS_SIZES)
     print(f"Generated desktop icon assets in {BUILDER_DIR}")
 
 

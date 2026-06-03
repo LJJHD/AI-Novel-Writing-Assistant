@@ -1,4 +1,4 @@
-﻿# AI 小说创作工作台 / AI Novel Production Engine
+# AI 小说创作工作台 / AI Novel Production Engine
 一个面向长篇小说创作的 AI Native 开源项目。
 
 当前开发主线：
@@ -24,13 +24,14 @@
 - 👉 控制写作风格与叙事一致性
 - 👉 最终生成完整章节甚至整本小说
 
-## Windows 桌面版
+## 桌面版
 
 如果你只是想直接下载安装并开始使用，优先从桌面版入口进入：
 
 - 下载入口：[GitHub Releases](https://github.com/ExplosiveCoderflome/AI-Novel-Writing-Assistant/releases)
 - 最新版本页：[Latest Release](https://github.com/ExplosiveCoderflome/AI-Novel-Writing-Assistant/releases/latest)
-- 建议优先下载 `Setup.exe` 安装版；如果你不想安装，或者想放在 U 盘 / 临时目录里直接运行，再选择 `portable` 版本
+- Windows 建议优先下载 `Setup.exe` 安装版；如果你不想安装，或者想放在 U 盘 / 临时目录里直接运行，再选择 `portable` 版本
+- macOS 可以从源码构建 `dmg` / `zip` 桌面包；本地自用包适合个人安装测试，公开分发仍需要 Apple Developer 签名和公证
 
 
 
@@ -142,6 +143,12 @@
 - 模型选择器切换厂商时会即时刷新该厂商模型列表，减少先去设置页刷新再回来选择的操作。
 - 首页、小说列表和任务恢复等首屏读取更轻，模型状态、恢复摘要和小说列表会分级加载，打开页面时更不容易被后台接口拖慢。
 - 后端章节运行时、自动导演模块、小说应用服务、事件副作用和路由边界继续收敛，Prompt 调用也补上质量遥测，为后续排查长链路生成和恢复问题提供更稳定的基础。
+### 2026-05-28
+
+Mac 桌面端的拆书入口更稳定：在创建拆书分析时，可以直接选择知识文档和文档版本，不会因为系统原生下拉框在桌面壳里失效而卡住。
+
+- 拆书页的知识文档和版本选择改为应用内统一选择控件，点击后会在页面内展开选项。
+- 从知识库进入拆书或在拆书页直接创建分析，都可以继续沿用同一套文档选择体验。
 
 ## 功能预览
 ### 功能概览中的95%以上编写都是AI完成
@@ -310,6 +317,28 @@ pnpm run prepare:desktop-runtime
 ```
 
 桌面端运行时首次下载需要可访问 Electron 分发源的网络环境；如果你所在网络无法访问 GitHub Releases，建议先配置代理或镜像后再执行桌面端命令。
+
+#### 1.1 构建桌面安装包
+
+Windows 安装包：
+
+```bash
+pnpm run dist:desktop:nsis
+```
+
+macOS Apple Silicon 安装包：
+
+```bash
+pnpm run dist:desktop:mac
+```
+
+macOS Intel 安装包：
+
+```bash
+pnpm run dist:desktop:mac:x64
+```
+
+生成的桌面产物位于 `desktop/build/dist/`。macOS 本地自用包会生成 `dmg` 和 `zip`；如果要面向普通用户公开分发，请先准备 Apple Developer 签名身份和公证流程。
 
 如果你在 Windows 上执行 `pnpm install` 时卡在 `prisma preinstall`，通常先检查这两类问题：
 
@@ -619,4 +648,3 @@ docs/     设计文档、阶段检查点、模块计划与历史归档
 - 请遵守开源协议条款，并在适用场景下取得相应授权。
 
 贡献说明：新贡献默认按 [CLA.md](./CLA.md) 提交，可随项目按 AGPL-3.0-only 分发，并可纳入项目维护者另行提供的商业授权；详见 [CONTRIBUTING.md](./CONTRIBUTING.md)。
-
