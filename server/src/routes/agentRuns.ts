@@ -6,7 +6,11 @@ import { z } from "zod";
 import { agentRuntime } from "../agents";
 import { authMiddleware } from "../middleware/auth";
 import { validate } from "../middleware/validate";
-import { buildTaskRecoveryHint, normalizeFailureSummary } from "../services/task/taskSupport";
+import {
+  buildTaskRecoveryHint,
+  normalizeFailureSummary,
+  normalizeOptionalFailureText,
+} from "../services/task/taskSupport";
 
 const router = Router();
 
@@ -49,7 +53,7 @@ function enrichRunDetail(detail: AgentRunDetail): AgentRunDetail {
     diagnostics: {
       failureCode: failedStep?.errorCode ?? null,
       failureSummary,
-      failureDetails: failedStep?.error ?? detail.run.error ?? null,
+      failureDetails: normalizeOptionalFailureText(failedStep?.error ?? detail.run.error ?? null),
       recoveryHint: buildTaskRecoveryHint("agent_run", detail.run.status as TaskStatus),
     },
     sourceResource: detail.run.novelId

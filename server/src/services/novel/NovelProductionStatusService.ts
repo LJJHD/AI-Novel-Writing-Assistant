@@ -1,4 +1,5 @@
 import { prisma } from "../../db/prisma";
+import { normalizeFailureSummary } from "../task/taskSupport";
 import {
   DirectorFactSummaryService,
   type DirectorFactBaseSummary,
@@ -329,7 +330,7 @@ function buildRuntimeStatus(job: {
     status,
     state,
     label,
-    failureSummary: state === "failed" ? job?.error ?? "后台任务失败。" : null,
+    failureSummary: state === "failed" ? normalizeFailureSummary(job?.error, "后台任务失败。") : null,
     isActive: state === "queued" || state === "running",
     blocksFactProgress: false,
   };

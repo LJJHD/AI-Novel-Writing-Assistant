@@ -35,6 +35,7 @@ import {
   buildTaskRecoveryHint,
   isArchivableTaskStatus,
   normalizeFailureSummary,
+  normalizeOptionalFailureText,
 } from "../taskSupport";
 import { toTaskTokenUsageSummary } from "../taskTokenUsageSummary";
 import {
@@ -285,7 +286,9 @@ function mapSummary(row: {
   const isSkippableReviewBlockedFailure = status === "failed"
     && checkpointType === "chapter_batch_ready"
     && isSkippableAutoExecutionReviewFailure(row.lastError);
-  const lastError = (isRecoveryInProgress || isSkippableReviewBlockedFailure) ? null : row.lastError;
+  const lastError = (isRecoveryInProgress || isSkippableReviewBlockedFailure)
+    ? null
+    : normalizeOptionalFailureText(row.lastError);
   const resumeTarget = normalizeWorkflowResumeTargetForCandidateSelection({
     id: row.id,
     checkpointType: row.checkpointType,
@@ -317,7 +320,7 @@ function mapSummary(row: {
     currentStage: row.currentStage,
     currentItemKey: row.currentItemKey,
     checkpointType,
-    lastError: row.lastError,
+    lastError,
     executionScopeLabel: autoExecution?.scopeLabel ?? null,
   });
   const blockingReason = isSkippableReviewBlockedFailure
@@ -328,7 +331,7 @@ function mapSummary(row: {
       scopeLabel: autoExecution?.scopeLabel?.trim() || "前 10 章",
       autoExecution,
     })
-    : row.checkpointSummary;
+    : normalizeOptionalFailureText(row.checkpointSummary);
   const failureSummary = status === "failed"
     ? (isSkippableReviewBlockedFailure
       ? buildSkippableAutoExecutionReviewFailureSummary(autoExecution)
@@ -337,7 +340,7 @@ function mapSummary(row: {
   const recoveryHint = isSkippableReviewBlockedFailure
     ? buildSkippableAutoExecutionReviewRecoveryHint(autoExecution)
     : pendingManualRecovery
-      ? (row.lastError?.trim() || "服务重启后任务已暂停，等待手动恢复。")
+      ? normalizeFailureSummary(row.lastError, "服务重启后任务已暂停，等待手动恢复。")
       : buildTaskRecoveryHint("novel_workflow", status);
   return {
     id: row.id,
@@ -570,7 +573,7 @@ export class NovelWorkflowTaskAdapter {
       meta: {
         lane: row.lane,
         checkpointType: row.checkpointType,
-        checkpointSummary: row.checkpointSummary,
+        checkpointSummary: summary.checkpointSummary,
         resumeTarget,
         directorSession: responseDirectorSession,
         llm: boundLlm
@@ -598,7 +601,7 @@ export class NovelWorkflowTaskAdapter {
         createdAt: summary.createdAt,
         updatedAt: summary.updatedAt,
       }),
-      failureDetails: row.lastError,
+      failureDetails: normalizeOptionalFailureText(row.lastError),
     };
   }
 

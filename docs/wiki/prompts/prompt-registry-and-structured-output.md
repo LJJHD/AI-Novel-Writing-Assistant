@@ -55,6 +55,7 @@
 ## 失败模式
 
 - 模型返回 JSON 不稳定：先检查 schema、provider JSON 能力和 repair policy，不在业务 service 里补局部解析。
+- OpenAI 兼容中转如果没有返回标准 Chat Completion 消息，可能在 SDK 层表现为 `Cannot read properties of undefined (reading 'message')`。结构化输出层只能把这类传输异常归一为中性的模型端点诊断，并让任务中心、自动导演阻塞原因、检查点摘要复用同一归一化结果；不能在没有原始响应证据时断定是中转平台、模型授权或空响应。连接探针和 SDK `fetch` 诊断路径应优先展示响应结构摘要，例如 `choices` 是否为空或 `choices[0].message` 是否缺失；如果只拿到 `Connection error` 这类底层原因，也应保留在任务可见错误里，避免再次退化成泛化传输错误。
 - 同一 prompt 频繁进入 JSON repair：检查日志里的原始字段值是否来自上下文或示例中的非 schema 值。如果模型只是复用了 prompt 中出现的别名，应先修 prompt/schema 合同；如果输出语义完整但字段名是常见别名，应在 PromptAsset schema 层归一，而不是让后台任务无限重试。
 - `expected string, received number` 如果集中出现在状态抽取字段，通常不是模型理解偏差，而是 schema 将“可读状态文本”和“可计算数值”混在同一个字段里。处理顺序应是：明确 prompt 输出合同，给结构化示例，在 schema preprocess 中保留语义并转成字符串；不要要求 LLM 为每一个数值字段单独 repair。
 - Prompt Catalog 缺上下文预览：补 `contextRequirements`，不要让预览临时查数据库。

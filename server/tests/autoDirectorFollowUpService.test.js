@@ -645,6 +645,113 @@ test("auto director follow-up service detail reuses workflow detail and adds fol
   }
 });
 
+test("auto director follow-up service detail normalizes structured checkpoint summaries", async () => {
+  const originals = {
+    isTaskArchived: taskArchive.isTaskArchived,
+    findUnique: prisma.novelWorkflowTask.findUnique,
+    notificationLogFindMany: prisma.autoDirectorFollowUpNotificationLog.findMany,
+    adapterDetail: NovelWorkflowTaskAdapter.prototype.detail,
+    getAutoDirectorChannelSettings: autoDirectorChannelSettingsService.getAutoDirectorChannelSettings,
+  };
+  const structuredTransportError = "[STRUCTURED_OUTPUT:transport_error] Cannot read properties of undefined (reading 'message')";
+
+  taskArchive.isTaskArchived = async () => false;
+  prisma.novelWorkflowTask.findUnique = async () => buildWorkflowRow({
+    id: "task_structured_checkpoint",
+    status: "failed",
+    currentStage: "AI 自动导演",
+    currentItemKey: "candidate_direction_batch",
+    currentItemLabel: "正在生成第一批书级方案",
+    checkpointType: null,
+    checkpointSummary: structuredTransportError,
+    lastError: structuredTransportError,
+    seedPayloadJson: JSON.stringify({
+      provider: "custom_aiport",
+      model: "gpt-5.5",
+    }),
+  });
+  prisma.autoDirectorFollowUpNotificationLog.findMany = async () => [];
+  NovelWorkflowTaskAdapter.prototype.detail = async function detailMock(taskId) {
+    return {
+      id: taskId,
+      kind: "novel_workflow",
+      title: "AI 自动导演",
+      status: "failed",
+      progress: 0.1,
+      currentStage: "AI 自动导演",
+      currentItemKey: "candidate_direction_batch",
+      currentItemLabel: "正在生成第一批书级方案",
+      executionScopeLabel: null,
+      displayStatus: "自动导演执行失败",
+      blockingReason: "模型调用没有拿到标准 OpenAI Chat Completion 消息。",
+      resumeAction: "从最近检查点恢复",
+      lastHealthyStage: "AI 自动导演",
+      attemptCount: 1,
+      maxAttempts: 3,
+      lastError: "模型调用没有拿到标准 OpenAI Chat Completion 消息。",
+      createdAt: "2026-04-21T08:00:00.000Z",
+      updatedAt: "2026-04-21T08:30:00.000Z",
+      heartbeatAt: "2026-04-21T08:30:00.000Z",
+      ownerId: "task_structured_checkpoint",
+      ownerLabel: "AI 自动导演",
+      sourceRoute: "/novels/create?workflowTaskId=task_structured_checkpoint&mode=director",
+      checkpointType: null,
+      checkpointSummary: "模型调用没有拿到标准 OpenAI Chat Completion 消息。",
+      resumeTarget: null,
+      nextActionLabel: "从最近检查点恢复",
+      noticeCode: null,
+      noticeSummary: null,
+      failureCode: "NOVEL_WORKFLOW_FAILED",
+      failureSummary: "模型调用没有拿到标准 OpenAI Chat Completion 消息。",
+      recoveryHint: "从最近检查点恢复",
+      tokenUsage: null,
+      sourceResource: null,
+      targetResources: [],
+      provider: "custom_aiport",
+      model: "gpt-5.5",
+      startedAt: "2026-04-21T08:00:00.000Z",
+      finishedAt: "2026-04-21T08:30:00.000Z",
+      retryCountLabel: "1/3",
+      meta: {},
+      steps: [],
+      failureDetails: "模型调用没有拿到标准 OpenAI Chat Completion 消息。",
+    };
+  };
+  autoDirectorChannelSettingsService.getAutoDirectorChannelSettings = async () => ({
+    baseUrl: "https://writer.example.test",
+    dingtalk: {
+      webhookUrl: "",
+      callbackToken: "",
+      operatorMapJson: "",
+      eventTypes: [],
+    },
+    wecom: {
+      webhookUrl: "",
+      callbackToken: "",
+      operatorMapJson: "",
+      eventTypes: [],
+    },
+  });
+
+  const service = new AutoDirectorFollowUpService();
+  const originalHeal = service.workflowService.healAutoDirectorTaskState;
+  service.workflowService.healAutoDirectorTaskState = async () => false;
+
+  try {
+    const detail = await service.getDetail("task_structured_checkpoint", { heal: false });
+    assert.ok(detail);
+    assert.match(detail.checkpointSummary ?? "", /没有拿到标准 OpenAI Chat Completion 消息/);
+    assert.doesNotMatch(detail.checkpointSummary ?? "", /Cannot read properties/);
+  } finally {
+    taskArchive.isTaskArchived = originals.isTaskArchived;
+    prisma.novelWorkflowTask.findUnique = originals.findUnique;
+    prisma.autoDirectorFollowUpNotificationLog.findMany = originals.notificationLogFindMany;
+    NovelWorkflowTaskAdapter.prototype.detail = originals.adapterDetail;
+    autoDirectorChannelSettingsService.getAutoDirectorChannelSettings = originals.getAutoDirectorChannelSettings;
+    service.workflowService.healAutoDirectorTaskState = originalHeal;
+  }
+});
+
 test("auto director follow-up service detail only marks replaced when replacement task exists", async () => {
   const originals = {
     isTaskArchived: taskArchive.isTaskArchived,

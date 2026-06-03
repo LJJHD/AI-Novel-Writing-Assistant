@@ -4,8 +4,24 @@ import {
 } from "../../llm/structuredOutput";
 import { summarizeStructuredOutputFailure } from "../../llm/structuredInvoke";
 
+export function normalizeTaskFailureText(summary?: string | null, fallback = "当前没有明确失败记录。"): string {
+  const trimmed = summary?.trim();
+  if (!trimmed) {
+    return fallback;
+  }
+  return resolveStructuredFailureSummary(trimmed).failureSummary ?? trimmed;
+}
+
 export function normalizeFailureSummary(summary?: string | null, fallback = "当前没有明确失败记录。"): string {
-  return summary?.trim() || fallback;
+  return normalizeTaskFailureText(summary, fallback);
+}
+
+export function normalizeOptionalFailureText(summary?: string | null): string | null {
+  const trimmed = summary?.trim();
+  if (!trimmed) {
+    return summary ?? null;
+  }
+  return resolveStructuredFailureSummary(trimmed).failureSummary ?? trimmed;
 }
 
 export function resolveStructuredFailureSummary(summary?: string | null): {

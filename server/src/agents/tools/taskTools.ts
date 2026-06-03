@@ -1,6 +1,10 @@
 import { prisma } from "../../db/prisma";
 import { taskCenterService } from "../../services/task/TaskCenterService";
-import { buildTaskRecoveryHint, normalizeFailureSummary } from "../../services/task/taskSupport";
+import {
+  buildTaskRecoveryHint,
+  normalizeFailureSummary,
+  normalizeOptionalFailureText,
+} from "../../services/task/taskSupport";
 import { AgentToolError, type AgentToolName } from "../types";
 import type { AgentToolDefinition } from "./toolTypes";
 import {
@@ -49,7 +53,7 @@ export const taskToolDefinitions: Partial<
           progress: item.progress,
           currentStage: item.currentStage ?? null,
           ownerLabel: item.ownerLabel,
-          failureSummary: item.failureSummary ?? item.lastError ?? null,
+          failureSummary: normalizeOptionalFailureText(item.failureSummary ?? item.lastError ?? null),
           recoveryHint: item.recoveryHint ?? null,
         })),
         summary: `已读取 ${data.items.length} 个系统任务。`,
@@ -72,7 +76,7 @@ export const taskToolDefinitions: Partial<
       if (!detail) {
         throw new AgentToolError("NOT_FOUND", "Task not found.");
       }
-      const failureSummary = detail.failureSummary ?? detail.lastError ?? null;
+      const failureSummary = normalizeOptionalFailureText(detail.failureSummary ?? detail.lastError ?? null);
       return getTaskDetailOutputSchema.parse({
         id: detail.id,
         kind: detail.kind,
@@ -82,7 +86,7 @@ export const taskToolDefinitions: Partial<
         ownerLabel: detail.ownerLabel,
         sourceRoute: detail.sourceRoute,
         failureSummary,
-        failureDetails: detail.failureDetails ?? detail.lastError ?? null,
+        failureDetails: normalizeOptionalFailureText(detail.failureDetails ?? detail.lastError ?? null),
         recoveryHint: detail.recoveryHint ?? buildTaskRecoveryHint(detail.kind, detail.status),
         summary: `已读取任务 ${detail.title}。`,
       });
@@ -116,7 +120,7 @@ export const taskToolDefinitions: Partial<
         id: detail.id,
         status: detail.status,
         failureSummary,
-        failureDetails: detail.failureDetails ?? detail.lastError ?? null,
+        failureDetails: normalizeOptionalFailureText(detail.failureDetails ?? detail.lastError ?? null),
         recoveryHint,
         summary: failureSummary,
       });
@@ -159,7 +163,7 @@ export const taskToolDefinitions: Partial<
         runId: run.id,
         status: run.status,
         failureSummary,
-        failureDetails: failedStep?.error ?? run.error ?? null,
+        failureDetails: normalizeOptionalFailureText(failedStep?.error ?? run.error ?? null),
         recoveryHint: buildTaskRecoveryHint("agent_run", run.status),
         lastFailedStep: failedStep ? `${failedStep.agentName}.${failedStep.stepType}` : null,
         summary: failureSummary,
@@ -225,15 +229,16 @@ export const taskToolDefinitions: Partial<
           where: { id: input.runId },
         });
         if (run && run.novelId === input.novelId && run.error?.trim()) {
+          const failureSummary = normalizeFailureSummary(run.error, "运行失败，但没有记录明确错误。");
           return explainGenerationBlockerOutputSchema.parse({
             novelId: input.novelId,
             chapterOrder: input.chapterOrder ?? null,
             blockerType: "agent_run",
             status: run.status,
-            failureSummary: run.error.trim(),
-            failureDetails: run.error,
+            failureSummary,
+            failureDetails: normalizeOptionalFailureText(run.error),
             recoveryHint: buildTaskRecoveryHint("agent_run", run.status),
-            summary: run.error.trim(),
+            summary: failureSummary,
           });
         }
       }
@@ -286,7 +291,7 @@ export const taskToolDefinitions: Partial<
         blockerType,
         status: job.status,
         failureSummary,
-        failureDetails: job.error ?? null,
+        failureDetails: normalizeOptionalFailureText(job.error ?? null),
         recoveryHint: buildTaskRecoveryHint("novel_pipeline", job.status),
         summary: failureSummary,
       });

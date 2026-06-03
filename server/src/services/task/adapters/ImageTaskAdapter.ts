@@ -7,6 +7,7 @@ import {
   buildTaskRecoveryHint,
   isArchivableTaskStatus,
   normalizeFailureSummary,
+  normalizeOptionalFailureText,
 } from "../taskSupport";
 import {
   archiveTask as recordTaskArchive,
@@ -122,14 +123,14 @@ export class ImageTaskAdapter {
       currentItemLabel: row.currentItemLabel,
       attemptCount: row.retryCount,
       maxAttempts: row.maxRetries,
-      lastError: row.error,
+      lastError: normalizeOptionalFailureText(row.error),
       createdAt: row.createdAt.toISOString(),
       updatedAt: row.updatedAt.toISOString(),
       heartbeatAt: row.heartbeatAt?.toISOString() ?? null,
       failureCode: row.status === "failed" ? "IMAGE_GENERATION_FAILED" : null,
       failureSummary: row.status === "failed"
         ? normalizeFailureSummary(row.error, "图像任务失败，但没有记录明确错误。")
-        : row.error,
+        : normalizeOptionalFailureText(row.error),
       recoveryHint: buildTaskRecoveryHint("image_generation", row.status as TaskStatus),
       targetResources: [],
     }));
@@ -172,14 +173,14 @@ export class ImageTaskAdapter {
       currentItemLabel: row.currentItemLabel,
       attemptCount: row.retryCount,
       maxAttempts: row.maxRetries,
-      lastError: row.error,
+      lastError: normalizeOptionalFailureText(row.error),
       createdAt: row.createdAt.toISOString(),
       updatedAt: row.updatedAt.toISOString(),
       heartbeatAt: row.heartbeatAt?.toISOString() ?? null,
       failureCode: row.status === "failed" ? "IMAGE_GENERATION_FAILED" : null,
       failureSummary: row.status === "failed"
         ? normalizeFailureSummary(row.error, "图像任务失败，但没有记录明确错误。")
-        : row.error,
+        : normalizeOptionalFailureText(row.error),
       recoveryHint: buildTaskRecoveryHint("image_generation", row.status as TaskStatus),
       targetResources: [],
     };
@@ -208,7 +209,7 @@ export class ImageTaskAdapter {
         summary.createdAt,
         summary.updatedAt,
       ),
-      failureDetails: row.error,
+      failureDetails: normalizeOptionalFailureText(row.error),
     };
   }
 

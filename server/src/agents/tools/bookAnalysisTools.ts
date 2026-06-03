@@ -1,4 +1,5 @@
 import { prisma } from "../../db/prisma";
+import { normalizeFailureSummary, normalizeOptionalFailureText } from "../../services/task/taskSupport";
 import { AgentToolError, type AgentToolName } from "../types";
 import type { AgentToolDefinition } from "./toolTypes";
 import {
@@ -49,7 +50,7 @@ export const bookAnalysisToolDefinitions: Partial<
           status: row.status,
           progress: row.progress,
           currentStage: row.currentStage ?? null,
-          lastError: row.lastError ?? null,
+          lastError: normalizeOptionalFailureText(row.lastError),
           updatedAt: row.updatedAt.toISOString(),
         })),
         summary: `已读取 ${rows.length} 个拆书任务。`,
@@ -95,7 +96,7 @@ export const bookAnalysisToolDefinitions: Partial<
         progress: row.progress,
         currentStage: row.currentStage ?? null,
         currentItemLabel: row.currentItemLabel ?? null,
-        lastError: row.lastError ?? null,
+        lastError: normalizeOptionalFailureText(row.lastError),
         sectionCount: row.sections.length,
         updatedAt: row.updatedAt.toISOString(),
       });
@@ -120,7 +121,7 @@ export const bookAnalysisToolDefinitions: Partial<
         throw new AgentToolError("NOT_FOUND", "Book analysis not found.");
       }
       const failureSummary = row.status === "failed"
-        ? (row.lastError?.trim() || "拆书任务失败，但没有记录明确错误。")
+        ? normalizeFailureSummary(row.lastError, "拆书任务失败，但没有记录明确错误。")
         : row.status === "cancelled"
           ? "拆书任务已取消。"
           : row.status === "running"
@@ -139,7 +140,7 @@ export const bookAnalysisToolDefinitions: Partial<
         analysisId: row.id,
         status: row.status,
         failureSummary,
-        failureDetails: row.lastError ?? null,
+        failureDetails: normalizeOptionalFailureText(row.lastError),
         recoveryHint,
         summary: failureSummary,
       });

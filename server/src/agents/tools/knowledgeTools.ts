@@ -1,4 +1,5 @@
 import { prisma } from "../../db/prisma";
+import { normalizeFailureSummary, normalizeOptionalFailureText } from "../../services/task/taskSupport";
 import { AgentToolError, type AgentToolName } from "../types";
 import type { AgentToolDefinition } from "./toolTypes";
 import {
@@ -50,7 +51,7 @@ export const knowledgeToolDefinitions: Partial<
           status: row.status,
           latestIndexStatus: row.latestIndexStatus,
           lastIndexedAt: row.lastIndexedAt?.toISOString() ?? null,
-          latestIndexError: latestJobMap.get(row.id)?.lastError ?? null,
+          latestIndexError: normalizeOptionalFailureText(latestJobMap.get(row.id)?.lastError),
         })),
         summary: `已读取 ${rows.length} 个知识文档。`,
       });
@@ -97,7 +98,7 @@ export const knowledgeToolDefinitions: Partial<
         activeVersionNumber: row.activeVersionNumber,
         latestIndexStatus: row.latestIndexStatus,
         lastIndexedAt: row.lastIndexedAt?.toISOString() ?? null,
-        latestIndexError: latestJob?.lastError ?? null,
+        latestIndexError: normalizeOptionalFailureText(latestJob?.lastError),
         versionCount: row.versions.length,
         bindingCount: row.bindings.length,
         summary: `文档《${row.title}》当前索引状态为 ${row.latestIndexStatus}。`,
@@ -130,7 +131,7 @@ export const knowledgeToolDefinitions: Partial<
         orderBy: [{ updatedAt: "desc" }, { id: "desc" }],
       });
       const failureSummary = row.latestIndexStatus === "failed"
-        ? (latestJob?.lastError?.trim() || "索引任务失败，但未记录明确错误。")
+        ? normalizeFailureSummary(latestJob?.lastError, "索引任务失败，但未记录明确错误。")
         : row.latestIndexStatus === "running"
           ? "索引任务仍在执行中，并未失败。"
           : row.latestIndexStatus === "queued"
@@ -145,7 +146,7 @@ export const knowledgeToolDefinitions: Partial<
         documentId: row.id,
         status: row.latestIndexStatus,
         failureSummary,
-        failureDetails: latestJob?.lastError ?? null,
+        failureDetails: normalizeOptionalFailureText(latestJob?.lastError),
         recoveryHint,
         summary: failureSummary,
       });

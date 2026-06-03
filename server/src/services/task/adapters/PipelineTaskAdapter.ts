@@ -12,6 +12,7 @@ import {
   buildTaskRecoveryHint,
   isArchivableTaskStatus,
   normalizeFailureSummary,
+  normalizeOptionalFailureText,
 } from "../taskSupport";
 import { toTaskTokenUsageSummary } from "../taskTokenUsageSummary";
 import {
@@ -81,7 +82,7 @@ export class PipelineTaskAdapter {
       displayStatus: notice.displayStatus,
       attemptCount: row.retryCount,
       maxAttempts: row.maxRetries,
-      lastError: row.error,
+      lastError: normalizeOptionalFailureText(row.error),
       createdAt: row.createdAt.toISOString(),
       updatedAt: row.updatedAt.toISOString(),
       heartbeatAt: row.heartbeatAt?.toISOString() ?? null,
@@ -207,7 +208,7 @@ export class PipelineTaskAdapter {
         summary.createdAt,
         summary.updatedAt,
       ),
-      failureDetails: row.error,
+      failureDetails: normalizeOptionalFailureText(row.error),
     };
   }
 

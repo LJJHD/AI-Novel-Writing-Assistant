@@ -231,6 +231,88 @@ test("summarizeStructuredOutputFailure tells users to retry or switch models for
   assert.match(summary.summary, /更强模型|备用模型/);
 });
 
+test("summarizeStructuredOutputFailure explains empty OpenAI-compatible responses", () => {
+  const summary = structuredInvoke.summarizeStructuredOutputFailure({
+    error: new TypeError("Cannot read properties of undefined (reading 'message')"),
+    fallbackAvailable: false,
+  });
+
+  assert.equal(summary.category, "transport_error");
+  assert.equal(summary.failureCode, "STRUCTURED_OUTPUT_TRANSPORT_ERROR");
+  assert.match(summary.summary, /没有拿到标准 OpenAI Chat Completion 消息/);
+  assert.match(summary.summary, /OpenAI 兼容/);
+  assert.match(summary.summary, /中转平台是否已授权/);
+  assert.doesNotMatch(summary.summary, /Cannot read properties/);
+});
+
+test("invokeStructuredLlmDetailed wraps empty OpenAI-compatible responses with actionable text", async () => {
+  const originalResolveOptions = factory.resolveLLMClientOptions;
+  const originalCreateLLM = factory.createLLMFromResolvedOptions;
+
+  factory.resolveLLMClientOptions = async (provider, options = {}) => {
+    const resolvedProvider = provider ?? "custom_aiport";
+    const structuredProfile = options.executionMode === "structured"
+      ? resolveStructuredOutputProfile({
+        provider: resolvedProvider,
+        model: options.model ?? "gpt-5.5",
+        baseURL: options.baseURL ?? "https://api.aiport.example/v1",
+        executionMode: "structured",
+      })
+      : null;
+    return {
+      provider: resolvedProvider,
+      providerName: "AIPORT",
+      model: options.model ?? "gpt-5.5",
+      temperature: options.temperature ?? 0.3,
+      apiKey: "test-key",
+      baseURL: options.baseURL ?? "https://api.aiport.example/v1",
+      maxTokens: options.maxTokens,
+      requestProtocol: "openai_compatible",
+      reasoningEnabled: true,
+      modelKwargs: undefined,
+      includeRawResponse: false,
+      executionMode: options.executionMode ?? "plain",
+      structuredProfile,
+      structuredStrategy: options.structuredStrategy ?? null,
+      reasoningForcedOff: false,
+      taskType: options.taskType,
+      promptMeta: options.promptMeta,
+    };
+  };
+  factory.createLLMFromResolvedOptions = () => ({
+    invoke: async () => {
+      throw new TypeError("Cannot read properties of undefined (reading 'message')");
+    },
+  });
+
+  try {
+    await assert.rejects(
+      () => structuredInvoke.invokeStructuredLlmDetailed({
+        provider: "custom_aiport",
+        model: "gpt-5.5",
+        label: "structured.invoke.aiport.empty-response",
+        taskType: "planner",
+        schema: z.object({
+          value: z.string(),
+        }),
+        systemPrompt: "只返回 JSON。",
+        userPrompt: "给我一个 value。",
+        disableFallbackModel: true,
+      }),
+      (error) => {
+        assert.match(error.message, /STRUCTURED_OUTPUT:transport_error/);
+        assert.match(error.message, /没有拿到标准 OpenAI Chat Completion 消息/);
+        assert.match(error.message, /中转平台是否已授权/);
+        assert.doesNotMatch(error.message, /Cannot read properties/);
+        return true;
+      },
+    );
+  } finally {
+    factory.resolveLLMClientOptions = originalResolveOptions;
+    factory.createLLMFromResolvedOptions = originalCreateLLM;
+  }
+});
+
 test("invokeStructuredLlmDetailed degrades to prompt JSON before using fallback models", async () => {
   const originalResolveOptions = factory.resolveLLMClientOptions;
   const originalCreateLLM = factory.createLLMFromResolvedOptions;

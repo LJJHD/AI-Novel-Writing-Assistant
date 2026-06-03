@@ -7,6 +7,7 @@ import {
   buildTaskRecoveryHint,
   isArchivableTaskStatus,
   normalizeFailureSummary,
+  normalizeOptionalFailureText,
 } from "../taskSupport";
 import {
   archiveTask as recordTaskArchive,
@@ -156,7 +157,7 @@ export class KnowledgeTaskAdapter {
           currentItemLabel: progress?.label ?? null,
           attemptCount: row.attempts,
           maxAttempts: row.maxAttempts,
-          lastError: row.lastError,
+          lastError: normalizeOptionalFailureText(row.lastError),
           createdAt,
           updatedAt,
           heartbeatAt: progress?.updatedAt ?? updatedAt,
@@ -168,7 +169,7 @@ export class KnowledgeTaskAdapter {
             ? normalizeFailureSummary(row.lastError, "知识库索引失败，但没有记录明确错误。")
             : row.status === "cancelled"
               ? "知识库索引已取消。"
-              : row.lastError,
+              : normalizeOptionalFailureText(row.lastError),
           recoveryHint: buildTaskRecoveryHint("knowledge_document", statusValue),
           sourceResource: {
             type: "knowledge_document",
@@ -226,7 +227,7 @@ export class KnowledgeTaskAdapter {
       currentItemLabel: progress?.label ?? null,
       attemptCount: row.attempts,
       maxAttempts: row.maxAttempts,
-      lastError: row.lastError,
+      lastError: normalizeOptionalFailureText(row.lastError),
       createdAt,
       updatedAt,
       heartbeatAt: progress?.updatedAt ?? updatedAt,
@@ -238,7 +239,7 @@ export class KnowledgeTaskAdapter {
         ? normalizeFailureSummary(row.lastError, "知识库索引失败，但没有记录明确错误。")
         : row.status === "cancelled"
           ? "知识库索引已取消。"
-          : row.lastError,
+          : normalizeOptionalFailureText(row.lastError),
       recoveryHint: buildTaskRecoveryHint("knowledge_document", statusValue),
       sourceResource: {
         type: "knowledge_document",
@@ -287,7 +288,7 @@ export class KnowledgeTaskAdapter {
         summary.createdAt,
         summary.updatedAt,
       ),
-      failureDetails: row.lastError,
+      failureDetails: normalizeOptionalFailureText(row.lastError),
     };
   }
 

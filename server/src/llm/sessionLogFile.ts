@@ -157,8 +157,8 @@ function resolveSessionLogPath(kind: "llm" | "llm-repair"): string | null {
   return resolved;
 }
 
-function appendSessionLog(kind: "llm" | "llm-repair", entry: unknown): void {
-  if (!shouldWriteLlmFileLog()) {
+function appendSessionLog(kind: "llm" | "llm-repair", entry: unknown, options: { force?: boolean } = {}): void {
+  if (!options.force && !shouldWriteLlmFileLog()) {
     return;
   }
 
@@ -187,6 +187,10 @@ function appendSessionLog(kind: "llm" | "llm-repair", entry: unknown): void {
 
 export function appendLlmSessionLog(entry: unknown): void {
   appendSessionLog("llm", entry);
+}
+
+export function appendLlmDiagnosticSessionLog(entry: unknown): void {
+  appendSessionLog("llm", entry, { force: true });
 }
 
 export function appendLlmRepairSessionLog(entry: unknown): void {

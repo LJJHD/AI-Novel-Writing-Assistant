@@ -7,6 +7,7 @@ import {
   buildTaskRecoveryHint,
   isArchivableTaskStatus,
   normalizeFailureSummary,
+  normalizeOptionalFailureText,
 } from "../taskSupport";
 import { buildAgentRunTaskCenterVisibilityWhere } from "../taskVisibility";
 import {
@@ -46,7 +47,7 @@ export class AgentRunTaskAdapter {
       currentItemLabel: `steps:${stepCount}`,
       attemptCount: 0,
       maxAttempts: 0,
-      lastError: item.error,
+      lastError: normalizeOptionalFailureText(item.error),
       createdAt: item.createdAt.toISOString(),
       updatedAt: item.updatedAt.toISOString(),
       heartbeatAt: item.status === "running" || item.status === "waiting_approval" ? item.updatedAt.toISOString() : null,
@@ -58,7 +59,7 @@ export class AgentRunTaskAdapter {
         ? normalizeFailureSummary(item.error, "运行失败，但没有记录明确错误。")
         : item.status === "waiting_approval"
           ? "当前运行在等待审批。"
-          : item.error,
+          : normalizeOptionalFailureText(item.error),
       recoveryHint: buildTaskRecoveryHint("agent_run", item.status as TaskStatus),
       sourceResource: item.novelId
         ? {
@@ -173,10 +174,12 @@ export class AgentRunTaskAdapter {
         approvals: detail.approvals,
       },
       steps,
-      failureDetails: detail.diagnostics?.failureDetails
-        ?? detail.steps.filter((step) => step.status === "failed").at(-1)?.error
-        ?? detail.run.error
-        ?? null,
+      failureDetails: normalizeOptionalFailureText(
+        detail.diagnostics?.failureDetails
+          ?? detail.steps.filter((step) => step.status === "failed").at(-1)?.error
+          ?? detail.run.error
+          ?? null,
+      ),
     };
   }
 

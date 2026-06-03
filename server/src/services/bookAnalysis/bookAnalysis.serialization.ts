@@ -1,5 +1,6 @@
 import type { BookAnalysis, BookAnalysisSection, BookAnalysisSectionKey, BookAnalysisStatus } from "@ai-novel/shared/types/bookAnalysis";
 import type { LLMProvider } from "@ai-novel/shared/types/llm";
+import { normalizeOptionalFailureText } from "../task/taskSupport";
 import { resolveLiveBookAnalysisStatus } from "./bookAnalysis.status";
 import { decodeEvidence, decodeStructuredData } from "./bookAnalysis.utils";
 
@@ -86,7 +87,7 @@ export function serializeAnalysisRow(row: AnalysisRowForSerialize): BookAnalysis
     cancelRequestedAt: row.cancelRequestedAt?.toISOString() ?? null,
     attemptCount: row.attemptCount,
     maxAttempts: row.maxAttempts,
-    lastError: row.lastError,
+    lastError: normalizeOptionalFailureText(row.lastError),
     lastRunAt: row.lastRunAt?.toISOString() ?? null,
     publishedDocumentId: row.publishedDocumentId,
     createdAt: row.createdAt.toISOString(),

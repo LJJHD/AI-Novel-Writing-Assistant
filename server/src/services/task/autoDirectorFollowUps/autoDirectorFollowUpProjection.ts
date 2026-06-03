@@ -22,6 +22,7 @@ import {
   getDirectorLlmOptionsFromSeedPayload,
   type DirectorWorkflowSeedPayload,
 } from "../../novel/director/runtime/novelDirectorHelpers";
+import { normalizeOptionalFailureText } from "../taskSupport";
 import {
   compareAutoDirectorFollowUpSections,
   resolveAutoDirectorFollowUpSection,
@@ -258,7 +259,7 @@ function buildBlockingReason(row: FollowUpWorkflowRow): string | null {
     currentStage: row.currentStage,
     currentItemKey: row.currentItemKey,
     checkpointType: row.checkpointType,
-    lastError: row.lastError,
+    lastError: normalizeOptionalFailureText(row.lastError),
     executionScopeLabel: getExecutionScopeLabel(row.seedPayloadJson),
   }).blockingReason;
 }
@@ -267,7 +268,7 @@ function buildFollowUpSummary(
   row: FollowUpWorkflowRow,
   resolved: AutoDirectorResolvedFollowUpReason,
 ): string {
-  const checkpointSummary = row.checkpointSummary?.trim();
+  const checkpointSummary = normalizeOptionalFailureText(row.checkpointSummary)?.trim();
   if (checkpointSummary) {
     return checkpointSummary;
   }
@@ -489,7 +490,7 @@ export function buildMilestones(row: Pick<FollowUpWorkflowRow, "milestonesJson" 
     label: buildMilestoneLabel(milestone),
     at: milestone.createdAt,
     status: row.status,
-    summary: milestone.summary,
+    summary: normalizeOptionalFailureText(milestone.summary) ?? milestone.summary,
   }));
 }
 
