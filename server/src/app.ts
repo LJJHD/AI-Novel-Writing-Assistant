@@ -74,7 +74,7 @@ function parseEnvFlag(value: string | undefined, defaultValue: boolean): boolean
 export function createApp() {
   getSharedNovelServices();
   const app = express();
-  const jsonBodyLimit = process.env.API_JSON_LIMIT ?? "20mb";
+  const jsonBodyLimit = process.env.API_JSON_LIMIT ?? "60mb";
   const corsOriginEnv = process.env.CORS_ORIGIN;
   const corsAllowList = corsOriginEnv
     ? corsOriginEnv

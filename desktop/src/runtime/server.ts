@@ -15,6 +15,7 @@ import {
 type DesktopServerMode = "external" | "managed";
 
 const DESKTOP_SQLITE_DATABASE_URL = "file:./dev.db";
+const DESKTOP_API_JSON_LIMIT = process.env.API_JSON_LIMIT?.trim() || "60mb";
 
 export interface DesktopServerHandle {
   mode: DesktopServerMode;
@@ -207,6 +208,7 @@ function startWorkspaceManagedServer(port: number): ManagedDesktopProcess {
       ...process.env,
       AI_NOVEL_RUNTIME: "desktop",
       AI_NOVEL_APP_DATA_DIR: appDataDir,
+      API_JSON_LIMIT: DESKTOP_API_JSON_LIMIT,
       PORT: String(port),
       HOST: "127.0.0.1",
       ALLOW_LAN: "false",
@@ -244,6 +246,7 @@ function startPackagedManagedServer(port: number): ManagedDesktopProcess {
       AI_NOVEL_APP_DATA_DIR: resolveDesktopAppDataDir(),
       AI_NOVEL_DATABASE_MODE: "sqlite",
       DATABASE_URL: DESKTOP_SQLITE_DATABASE_URL,
+      API_JSON_LIMIT: DESKTOP_API_JSON_LIMIT,
       PORT: String(port),
       HOST: "127.0.0.1",
       ALLOW_LAN: "false",
